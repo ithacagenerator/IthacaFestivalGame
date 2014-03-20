@@ -18,7 +18,7 @@
 #endif
 
 #define SENDING_TIMEOUT 10000
-#define ACK_TIMEOUT     500
+#define ACK_TIMEOUT     1000 // i changed this to 500, it was 1000
 #define TX_TIMEOUT      250
 
 int have_ball = START_WITH_BALL;
@@ -45,6 +45,7 @@ void led_red();
 void setup()
 {
   Serial.begin(115200);
+  Serial.println(F("Hello World"));
   irrecv.enableIRIn(); // Start the receiver 
   time_received_ball = 0; 
 }
@@ -65,27 +66,38 @@ void loop() {
     }   
     
     
-    while(millis() - time_received_ball <= SENDING_TIMEOUT){
+    while((millis() - time_received_ball) <= SENDING_TIMEOUT){
       
-      begin_transmit_timestamp = millis();    
+      begin_transmit_timestamp = millis(); 
+      Serial.println(F("TX: Send BURST"));   
       while(millis() - begin_transmit_timestamp <= TX_TIMEOUT){
-        irsend.sendSony(new_ball_number, 12); // Sony TV power code
-        delay(10);   
+        uint32_t timestamp = millis();
+        irsend.sendSony(new_ball_number, 12);
+        Serial.print(millis() - timestamp);
+        Serial.println(F(" ms"));
+        delay(100);   
       } 
       
       irrecv.enableIRIn();
       
-      begin_transmit_timestamp = millis(); 
-      while(millis() - begin_transmit_timestamp <= ACK_TIMEOUT){
+      begin_transmit_timestamp = millis();       
+      Serial.println(F("TX: Awaiting ACK"));         
+      while((millis() - begin_transmit_timestamp) <= ACK_TIMEOUT){
         
         if (irrecv.decode(&results)) {
           Serial.println(results.value, HEX);
           irrecv.resume(); // Receive the next value     
           if(results.value == next_ball_number){
             have_ball = 0;
+            Serial.println(F("Received ACK"));            
             delay(TX_TIMEOUT);
+            Serial.println(F("Going to RX"));            
             return;
           }        
+          else{
+            Serial.print(F("Received Unexpected Value: "));
+            Serial.println(results.value, HEX);
+          }
         }
         
       }
@@ -100,11 +112,19 @@ void loop() {
     led_off();    
 
     if (irrecv.decode(&results)) {
-      Serial.println(results.value, HEX);
       irrecv.resume(); // Receive the next value     
       if(results.value == MY_PLAYER_NUMBER){
+        Serial.println(F("RX: Received BURST"));
         have_ball = 1; 
         time_received_ball = millis();
+        
+        delay(TX_TIMEOUT);
+        Serial.println(F("Going to TX"));            
+        
+      }
+      else{
+        Serial.print(F("Unexpected Value: "));
+        Serial.println(results.value, HEX);        
       }
     }
     
