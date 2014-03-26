@@ -17,16 +17,11 @@
 #define START_WITH_BALL  0
 #endif
 
-#define SENDING_TIMEOUT 10000
-#define ACK_TIMEOUT     1000 // i changed this to 500, it was 1000
+#define TOTAL_SENDING_TIME 10000
 #define TX_TIMEOUT      250
 
-int have_ball = START_WITH_BALL;
-int caught_ball = START_WITH_BALL;
 int time_received_ball = 0;
-int begin_transmit_timestamp = 0;
-int ball_number = MY_PLAYER_NUMBER;
-
+boolean I_have_the_ball;
 
 int RECV_PIN = 4;
 IRrecv irrecv(RECV_PIN);
@@ -44,96 +39,60 @@ void led_red();
 
 void setup()
 {
+  if (MY_PLAYER_NUMBER == 1)
+    I_have_the_ball = true;
+   else
+     I_have_the_ball =false;
+   
   Serial.begin(115200);
   Serial.println(F("Hello World"));
   irrecv.enableIRIn(); // Start the receiver 
-  time_received_ball = 0; 
+ // time_received_ball = 0; 
 }
 
 void loop() {
   
-  if(have_ball){
+  if (I_have_the_ball)
+  {
     led_on();
     
-    int new_ball_number = MY_PLAYER_NUMBER + 1;
-    if(new_ball_number > NUM_PLAYERS){
-      new_ball_number = 1;
-    }
+    int ball_to_send = next_ball(MY_PLAYER_NUMBER);
+    int receipt_confirmation_number = next_ball(ball_to_send);
     
-    int next_ball_number = new_ball_number + 1;
-     if(next_ball_number > NUM_PLAYERS){
-      next_ball_number = 1;
-    }   
-    
-    
-    while((millis() - time_received_ball) <= SENDING_TIMEOUT){
+    boolean receivedConfirmation=false;
+    while(((millis() - time_received_ball) <= TOTAL_SENDING_TIME)&& !receivedConfirmation)
+    {
+      sendBall(ball_to_send);
+      delay(25);   
       
-      begin_transmit_timestamp = millis(); 
-      Serial.println(F("TX: Send BURST"));   
-      while(millis() - begin_transmit_timestamp <= TX_TIMEOUT){
-        uint32_t timestamp = millis();
-        irsend.sendSony(new_ball_number, 12);
-        Serial.print(millis() - timestamp);
-        Serial.println(F(" ms"));
-        delay(100);   
-      } 
+      //listen for 100 miliseconds
+      receivedConfirmation=listenForBall(100,receipt_confirmation_number);
+    } 
       
-      irrecv.enableIRIn();
-      
-      begin_transmit_timestamp = millis();       
-      Serial.println(F("TX: Awaiting ACK"));         
-      while((millis() - begin_transmit_timestamp) <= ACK_TIMEOUT){
-        
-        if (irrecv.decode(&results)) {
-          Serial.println(results.value, HEX);
-          irrecv.resume(); // Receive the next value     
-          if(results.value == next_ball_number){
-            have_ball = 0;
-            Serial.println(F("Received ACK"));            
-            delay(TX_TIMEOUT);
-            Serial.println(F("Going to RX"));            
-            return;
-          }        
-          else{
-            Serial.print(F("Received Unexpected Value: "));
-            Serial.println(results.value, HEX);
-          }
-        }
-        
+    if (!receivedConfirmation)
+    {
+      //game over
+      for(;;){
+        led_red();
       }
-    }
-    
-    for(;;){
-      led_red();
-    }
  
+    }
   }
-  else{ //if(!have_ball && !caught_ball){   
+   else  //I don't have the ball
+   {  
     led_off();    
-
-    if (irrecv.decode(&results)) {
-      irrecv.resume(); // Receive the next value     
-      if(results.value == MY_PLAYER_NUMBER){
-        Serial.println(F("RX: Received BURST"));
-        have_ball = 1; 
+    
+    while (!I_have_the_ball)
+    {
+                        //listen for 100 milliseconds
+      I_have_the_ball = listenForBall(100,MY_PLAYER_NUMBER);
+      if (I_have_the_ball)
+      {
         time_received_ball = millis();
-        
-        delay(TX_TIMEOUT);
-        Serial.println(F("Going to TX"));            
-        
-      }
-      else{
-        Serial.print(F("Unexpected Value: "));
-        Serial.println(results.value, HEX);        
       }
     }
     
   }
-  /*
-  else if(!have_ball && caught_ball){
-    led_done();    
-  }
-  */
    
 }
 
@@ -159,4 +118,42 @@ void led_red(){
     analogWrite(red_led_pin, 255);
     analogWrite(blue_led_pin, 0);
     analogWrite(green_led_pin, 0);    
+}
+
+int next_ball(int ball_number)
+{
+    ball_number = MY_PLAYER_NUMBER + 1;
+    if(ball_number > NUM_PLAYERS){
+      ball_number = 1;
+    }
+    return ball_number;
+}
+
+void sendBall(int ballNum)
+{
+
+     irsend.sendSony(ballNum, 12); // Sony TV power code
+     delay(10);   
+}
+
+boolean listenForBall(int milliSecondsToListen,int ballToListenFor)
+{
+  
+      int startTimeInMillis = millis();
+      
+      irrecv.enableIRIn();
+      
+      while((millis() - startTimeInMillis) <= milliSecondsToListen)
+      {
+        if (irrecv.decode(&results)) 
+        {
+          Serial.println(results.value, HEX);
+          irrecv.resume(); // Receive the next value     
+          if(results.value == ballToListenFor){
+            delay(TX_TIMEOUT);  //why?
+            return  true;
+          }   
+        }  
+       }
+       return false;
 }
