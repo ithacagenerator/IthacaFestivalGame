@@ -20,6 +20,14 @@
 #define TOTAL_SENDING_TIME 10000
 #define TX_TIMEOUT      250
 
+
+//The IR transmit pin is defined by what timer is chosen in the library IRRemoteint.h
+//Since we are using an ATTINY84 chip we have to use timer 1 which binds to arduino pin 6
+//If we were using ATMEGA328 timer 1 binds to pin 9
+
+int have_ball = START_WITH_BALL;
+int caught_ball = START_WITH_BALL;
+
 int time_received_ball = 0;
 boolean I_have_the_ball;
 
@@ -29,7 +37,7 @@ IRsend irsend;
 decode_results results;
 
 int red_led_pin = 10;
-int blue_led_pin = 9;
+int blue_led_pin = 12;
 int green_led_pin = 5;
 
 void led_on();
@@ -97,27 +105,27 @@ void loop() {
 }
 
 void led_on(){
-    analogWrite(red_led_pin, 255);
-    analogWrite(blue_led_pin, 255);
-    analogWrite(green_led_pin, 255); 
+    digitalWrite(red_led_pin, HIGH);
+    digitalWrite(blue_led_pin, HIGH);
+    digitalWrite(green_led_pin, HIGH); 
 }
 
 void led_off(){
-    analogWrite(red_led_pin, 0);
-    analogWrite(blue_led_pin, 0);
-    analogWrite(green_led_pin, 0); 
+    digitalWrite(red_led_pin, LOW);
+    digitalWrite(blue_led_pin, LOW);
+    digitalWrite(green_led_pin, LOW); 
 }
 
 void led_done(){
-    analogWrite(red_led_pin, 0);
-    analogWrite(blue_led_pin, 0);
-    analogWrite(green_led_pin, 255);  
+    digitalWrite(red_led_pin, LOW);
+    digitalWrite(blue_led_pin, LOW);
+    digitalWrite(green_led_pin, HIGH);  
 }
 
 void led_red(){
-    analogWrite(red_led_pin, 255);
-    analogWrite(blue_led_pin, 0);
-    analogWrite(green_led_pin, 0);    
+    digitalWrite(red_led_pin, HIGH);
+    digitalWrite(blue_led_pin, LOW);
+    digitalWrite(green_led_pin, LOW);    
 }
 
 int next_ball(int ball_number)
