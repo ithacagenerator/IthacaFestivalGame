@@ -6,7 +6,7 @@
 
 void PushButton_Init(void);
 boolean button_is_pressed(void);
-
+void wait_for_button_released(void);
 
 
 

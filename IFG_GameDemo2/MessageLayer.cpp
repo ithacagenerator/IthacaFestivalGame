@@ -140,7 +140,7 @@ IFG_StatusCode wait_for_ACK(){
       if(status_code == SUCCESS){
         rx_count = 0;
         // temp1, temp2 may have an ACK packet, lets find out
-        status_code = validate_ACK(temp1, temp2);    
+        status_code = validate_and_decode_ACK(temp1, temp2);    
         if(status_code == SUCCESS){
           return SUCCESS; 
         }
@@ -155,7 +155,7 @@ uint32_t awaiting_ack_duration(void){
   return (millis() - last_req_timestamp);
 }
 
-IFG_StatusCode validate_ACK(uint32_t packet0, uint32_t packet1){
+IFG_StatusCode validate_and_decode_ACK(uint32_t packet0, uint32_t packet1){
   IFG_StatusCode status_code = ERROR;
   uint8_t temp[8] = {0};
   uint8_t ii = 0;
@@ -197,32 +197,33 @@ IFG_StatusCode validate_ACK(uint32_t packet0, uint32_t packet1){
   return SUCCESS;
 }
 
+
 IFG_StatusCode wait_for_REQ(void){
   IFG_StatusCode status_code = ERROR;
-  uint8_t rx_count = 0;
   uint32_t temp1 = 0, temp2 = 0;
-  if(rx_count == 0){
-    status_code = Transport_receive(&temp1);
+
+  status_code = Transport_receive(&temp1);
+  if(status_code == SUCCESS){
+    status_code = Transport_receive(&temp2);    
     if(status_code == SUCCESS){
-      rx_count++;        
-    }      
-  }
-  else{
-    status_code = Transport_receive(&temp2);
-    if(status_code == SUCCESS){
-      rx_count = 0;
       // temp1, temp2 may have an REQ packet, lets find out
-      status_code = validate_REQ(temp1, temp2);    
+      status_code = validate_and_decode_REQ(temp1, temp2);    
       if(status_code == SUCCESS){
         return SUCCESS; 
       }
-    }            
-  }
+    }
+    else{
+      return ERROR;
+    }    
+  } 
+  else{
+    return ERROR;
+  } 
   
   return TIMEOUT;
 }
 
-IFG_StatusCode validate_REQ(uint32_t packet0, uint32_t packet1){
+IFG_StatusCode validate_and_decode_REQ(uint32_t packet0, uint32_t packet1){
   IFG_StatusCode status_code = ERROR;
   uint8_t temp[8] = {0};
   uint8_t ii = 0;
@@ -279,7 +280,7 @@ IFG_StatusCode wait_for_MSG(){
     // need to receive these packets in pairs to extract 3-bytes of payload = 1 player datum    
     
     if((rx_count & 1) == 0){
-      status_code = Transport_receive(&temp1);
+      status_code = Transport_receive(&temp1);      
       if(status_code != SUCCESS){
         return ERROR;  
       }            
@@ -289,7 +290,7 @@ IFG_StatusCode wait_for_MSG(){
       status_code = Transport_receive(&temp2);
       if(status_code == SUCCESS){        
         // temp1, temp2 may have a MSG packet, lets find out
-        status_code = validate_MSG(temp1, temp2);    
+        status_code = validate_and_decode_MSG(temp1, temp2);    
         if(status_code != SUCCESS){          
           return ERROR; 
         }
@@ -332,7 +333,7 @@ uint32_t awaiting_msg_duration(void){
   return (millis() - last_ack_timestamp);  
 }
 
-IFG_StatusCode validate_MSG(uint32_t packet0, uint32_t packet1){
+IFG_StatusCode validate_and_decode_MSG(uint32_t packet0, uint32_t packet1){
   IFG_StatusCode status_code = ERROR;
   uint8_t temp[8] = {0};
   uint8_t ii = 0;

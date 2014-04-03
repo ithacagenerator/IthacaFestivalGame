@@ -22,6 +22,7 @@ void Transport_transmit(uint32_t value){
   delay(20);
 }
 
+//TODO: add timeout argument, don't insta-fail
 IFG_StatusCode Transport_receive(uint32_t * res){
   IFG_StatusCode status_code = ERROR;
   if (irrecv.decode(&results)) {

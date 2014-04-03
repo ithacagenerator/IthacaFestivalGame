@@ -1,6 +1,6 @@
 #include <IRremote.h>
 
-#define PLAYER3
+#define PLAYER2
 
 #define NUM_PLAYERS 3
 

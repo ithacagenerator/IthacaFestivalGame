@@ -6,6 +6,6 @@
 
 void Transport_enable_receive(void);
 void Transport_transmit(uint32_t value);
-IFG_StatusCode Transport_receive(uint32_t * res);
+IFG_StatusCode Transport_receive(uint32_t * res); 
 
 #endif

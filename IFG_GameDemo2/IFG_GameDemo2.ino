@@ -17,9 +17,11 @@ void setup(){
   Transport_enable_receive(); // start the receiver
   PushButton_Init();
   LED_Init();
+  
+  //TODO: If fou are player one, you should star with the ball
 }
 
-void loop(){   
+void loop(){
   if(Ball_in_possession() == true){
     do_action_with_ball();
   }
@@ -36,6 +38,7 @@ void do_action_with_ball(void){
   
   if(status == SUCCESS){
     Ball_release();
+    wait_for_button_released();
   }
   else if(status == TIMEOUT){
     if(Ball_dropped()){
@@ -54,5 +57,6 @@ void do_action_without_ball(void){
   if(status == SUCCESS){
     Ball_possess();
     LED_White();
+    wait_for_button_released();    
   }
 }

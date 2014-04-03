@@ -23,8 +23,8 @@ IFG_StatusCode wait_for_REQ(void);
 IFG_StatusCode wait_for_MSG(void);
 uint32_t awaiting_ack_duration(void);
 uint32_t awaiting_msg_duration(void);
-IFG_StatusCode validate_ACK(uint32_t packet0, uint32_t packet1);
-IFG_StatusCode validate_REQ(uint32_t packet0, uint32_t packet1);
-IFG_StatusCode validate_MSG(uint32_t packet0, uint32_t packet1);
+IFG_StatusCode validate_and_decode_ACK(uint32_t packet0, uint32_t packet1);
+IFG_StatusCode validate_and_decode_REQ(uint32_t packet0, uint32_t packet1);
+IFG_StatusCode validate_and_decode_MSG(uint32_t packet0, uint32_t packet1);
 
 #endif

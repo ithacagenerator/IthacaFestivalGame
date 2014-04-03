@@ -3,13 +3,13 @@
 #include "IFG_Utility.h"
 
 #if defined(__USING_ATMEGA328__)
-#define PUSHBUTTON_PIN 9
+#define PUSHBUTTON_PIN 8
 #elif defined(__USING_ATTINY84__)
 
 #endif
 
 void PushButton_Init(void){
-  pinMode(PUSHBUTTON_PIN, INPUT_PULLUP);  
+  pinMode(PUSHBUTTON_PIN, INPUT_PULLUP);
 }
 
 boolean button_is_pressed(void){
@@ -17,4 +17,10 @@ boolean button_is_pressed(void){
     return true; 
   }
   return false; 
+}
+
+void wait_for_button_released(void){
+   while(digitalRead(PUSHBUTTON_PIN) == 0){
+     // spin
+   }   
 }
