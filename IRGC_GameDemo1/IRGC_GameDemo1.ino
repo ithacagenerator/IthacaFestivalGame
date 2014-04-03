@@ -1,6 +1,6 @@
 #include <IRremote.h>
 
-#define PLAYER3
+#define PLAYER1
 
 #define NUM_PLAYERS 3
 
@@ -48,6 +48,10 @@ void led_red();
 
 void setup()
 {
+  pinMode(red_led_pin, OUTPUT);
+  pinMode(blue_led_pin, OUTPUT);
+  pinMode(green_led_pin, OUTPUT);
+  
   Serial.begin(115200);
   Serial.println(F("Hello World"));
   irrecv.enableIRIn(); // Start the receiver 
