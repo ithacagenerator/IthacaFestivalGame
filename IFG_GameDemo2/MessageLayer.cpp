@@ -12,10 +12,11 @@ static uint8_t requesting_player_address = 0;               // source address as
 static uint32_t last_req_timestamp = 0;                     // the timestamp when the last REQ packet was sent
 static uint32_t last_ack_timestamp = 0;                     // the timestamp when the last ACK packet was sent
 
+
 IFG_StatusCode attempt_message_receive(void){
-  IFG_StatusCode status_code = ERROR;
+  IFG_StatusCode status_code = IFG_ERROR;
   status_code = wait_for_REQ();
-  if(status_code == SUCCESS){
+  if(status_code == IFG_SUCCESS){
     send_ACK();
     status_code = wait_for_MSG();
   }
@@ -25,16 +26,16 @@ IFG_StatusCode attempt_message_receive(void){
 }
 
 IFG_StatusCode attempt_message_transfer(void){
-  IFG_StatusCode status_code = ERROR;
+  IFG_StatusCode status_code = IFG_ERROR;
   
   send_REQ();
   status_code = wait_for_ACK();
-  if(status_code == SUCCESS){
+  if(status_code == IFG_SUCCESS){
     send_MSG();
-    return SUCCESS;
+    return IFG_SUCCESS;
   }  
   
-  return TIMEOUT;  
+  return IFG_TIMEOUT;  
 }
 
 void send_REQ(void){
@@ -125,30 +126,30 @@ void send_packet(){
 #define ACK_TIMEOUT_DURATION_MS 500
 
 IFG_StatusCode wait_for_ACK(){
-  IFG_StatusCode status_code = ERROR;
+  IFG_StatusCode status_code = IFG_ERROR;
   uint8_t rx_count = 0;
   uint32_t temp1 = 0, temp2 = 0;
   while(awaiting_ack_duration() < ACK_TIMEOUT_DURATION_MS){
     if(rx_count == 0){
       status_code = Transport_receive(&temp1);
-      if(status_code == SUCCESS){
+      if(status_code == IFG_SUCCESS){
         rx_count++;        
       }      
     }
     else{
       status_code = Transport_receive(&temp2);
-      if(status_code == SUCCESS){
+      if(status_code == IFG_SUCCESS){
         rx_count = 0;
         // temp1, temp2 may have an ACK packet, lets find out
         status_code = validate_and_decode_ACK(temp1, temp2);    
-        if(status_code == SUCCESS){
-          return SUCCESS; 
+        if(status_code == IFG_SUCCESS){
+          return IFG_SUCCESS; 
         }
       }            
     }
   }
   
-  return TIMEOUT;
+  return IFG_TIMEOUT;
 }
 
 uint32_t awaiting_ack_duration(void){
@@ -156,7 +157,7 @@ uint32_t awaiting_ack_duration(void){
 }
 
 IFG_StatusCode validate_and_decode_ACK(uint32_t packet0, uint32_t packet1){
-  IFG_StatusCode status_code = ERROR;
+  IFG_StatusCode status_code = IFG_ERROR;
   uint8_t temp[8] = {0};
   uint8_t ii = 0;
   uint16_t sum = 0;
@@ -174,18 +175,18 @@ IFG_StatusCode validate_and_decode_ACK(uint32_t packet0, uint32_t packet1){
   }
   
   if((sum & 0xff) != 0){
-    return ERROR; 
+    return IFG_ERROR; 
   }
   
   // at least the checksum is correct
   // am I the intended recipient?
   if(MY_ADDRESS != temp[4]){ // destination address is index 4 in the packet
-    return ERROR; 
+    return IFG_ERROR; 
   }
   
   // checksum is valid and I am the intended recipient
   if(PACKET_TYPE_ACK != temp[0]){ // packet type is index 0 of the packet
-    return ERROR;
+    return IFG_ERROR;
   }
   
   // looks good, lets go with it
@@ -194,37 +195,52 @@ IFG_StatusCode validate_and_decode_ACK(uint32_t packet0, uint32_t packet1){
   last_received_sequence_number <<= 8;
   last_received_sequence_number |= temp[2]; // lsb of sequence number is index 2 of the packet
   
-  return SUCCESS;
+  return IFG_SUCCESS;
 }
 
-
+// return SUCCESS if and only if a *valid* REQ packet is received
+// otherwise return ERROR on packet received but not validated
+// or TIMEOUT if no data is received
+// 
+// This function times out as quickly as possible
+// 
 IFG_StatusCode wait_for_REQ(void){
-  IFG_StatusCode status_code = ERROR;
+  IFG_StatusCode status_code = IFG_ERROR;
   uint32_t temp1 = 0, temp2 = 0;
 
   status_code = Transport_receive(&temp1);
-  if(status_code == SUCCESS){
-    status_code = Transport_receive(&temp2);    
-    if(status_code == SUCCESS){
-      // temp1, temp2 may have an REQ packet, lets find out
-      status_code = validate_and_decode_REQ(temp1, temp2);    
-      if(status_code == SUCCESS){
-        return SUCCESS; 
-      }
-    }
-    else{
-      return ERROR;
-    }    
-  } 
-  else{
-    return ERROR;
-  } 
+  if(status_code != IFG_SUCCESS){ 
+    return IFG_TIMEOUT; // no packet, no problem
+  }
   
-  return TIMEOUT;
+  // We might have just got the first half of a packet  
+  // it had better be a REQ packet type, otherwise bail out.
+  // One way this can happen is if you are out of sync with
+  // the transmitter and received the second half of a packet.
+  if(extract_packet_type(temp1) != PACKET_TYPE_REQ){
+    return IFG_ERROR; 
+  }
+    
+  // We are on the right track, lets try and receive 
+  // the second half of the packet
+  status_code = Transport_receive(&temp2);
+  if(status_code != IFG_SUCCESS){
+    return IFG_TIMEOUT;
+  }
+  
+  // At this point temp1, temp2 *may* hold a valid REQ packet
+  status_code = validate_and_decode_REQ(temp1, temp2);    
+  if(status_code != IFG_SUCCESS){
+    return IFG_ERROR; 
+  }
+
+  // all set, the requesting_player_address and last_received_sequence_number
+  // state variables were populated by validate_and_decode_REQ  
+  return IFG_SUCCESS;
 }
 
 IFG_StatusCode validate_and_decode_REQ(uint32_t packet0, uint32_t packet1){
-  IFG_StatusCode status_code = ERROR;
+  IFG_StatusCode status_code = IFG_ERROR;
   uint8_t temp[8] = {0};
   uint8_t ii = 0;
   uint16_t sum = 0;
@@ -242,18 +258,18 @@ IFG_StatusCode validate_and_decode_REQ(uint32_t packet0, uint32_t packet1){
   }
   
   if((sum & 0xff) != 0){
-    return ERROR; 
+    return IFG_ERROR; 
   }
   
   // at least the checksum is correct
   // REQ packets are supposed to have a destination address of 0
   if(0 != temp[4]){ // destination address is index 4 in the packet
-    return ERROR; 
+    return IFG_ERROR; 
   }
   
   // checksum is valid and I am the intended recipient
   if(PACKET_TYPE_REQ != temp[0]){ // packet type is index 0 of the packet
-    return ERROR;
+    return IFG_ERROR;
   }
   
   // looks good, lets go with it
@@ -262,13 +278,13 @@ IFG_StatusCode validate_and_decode_REQ(uint32_t packet0, uint32_t packet1){
   last_received_sequence_number <<= 8;
   last_received_sequence_number |= temp[2]; // lsb of sequence number is index 2 of the packet
   
-  return SUCCESS;
+  return IFG_SUCCESS;
 }
 
 #define MSG_TIMEOUT_DURATION_MS 600
 
 IFG_StatusCode wait_for_MSG(){
-  IFG_StatusCode status_code = ERROR;
+  IFG_StatusCode status_code = IFG_ERROR;
   uint16_t rx_count = 0;
   uint32_t temp1 = 0, temp2 = 0;
   uint16_t payload1 = 0, payload2 = 0;
@@ -279,54 +295,50 @@ IFG_StatusCode wait_for_MSG(){
   while(awaiting_msg_duration() < MSG_TIMEOUT_DURATION_MS){
     // need to receive these packets in pairs to extract 3-bytes of payload = 1 player datum    
     
-    if((rx_count & 1) == 0){
+    if((rx_count & 1) == 0){ 
       status_code = Transport_receive(&temp1);      
-      if(status_code != SUCCESS){
-        return ERROR;  
-      }            
-      rx_count++;              
+      if(status_code == IFG_SUCCESS){
+        rx_count++;    
+      }                             
     }
     else{
       status_code = Transport_receive(&temp2);
-      if(status_code == SUCCESS){        
+      if(status_code == IFG_SUCCESS){        
         // temp1, temp2 may have a MSG packet, lets find out
         status_code = validate_and_decode_MSG(temp1, temp2);    
-        if(status_code != SUCCESS){          
-          return ERROR; 
+        if(status_code != IFG_SUCCESS){   
+          return IFG_ERROR; // packet received, but failed to validate   
         }
-      }     
-      
-      if(field == 0){
-        payload1 = (temp2 >> 8);
-        payload1 &= 0x0fff; // 12-bits
-      }
-      else{ // field == 1
-        payload2 = (temp2 >> 8);
-        payload2 &= 0x0fff; // 12-bits     
-     
-        // now we can parse this into bytes
-        byte1 = payload1 >> 4;
-        byte2 = payload1 & 0x0f;
-        byte2 <<= 4;
-        byte2 |= ((payload2 & 0xf0) >> 4);
-        byte3 = payload2 & 0xff;
         
-        // and store them in the payload
-        message_payload[message_payload_idx++] = byte1;
-        message_payload[message_payload_idx++] = byte2;
-        message_payload[message_payload_idx++] = byte3;
-        
-        if(byte1 == 0){ // this is a terminator packet
-          return SUCCESS;
+        if(field == 0){
+          payload1 = (temp2 >> 8);
+          payload1 &= 0x0fff; // 12-bits
         }
-      }
-      
-      field = 1 - field; // toggle field      
-      rx_count++;      
+        else{ // field == 1
+          payload2 = (temp2 >> 8);
+          payload2 &= 0x0fff; // 12-bits     
+       
+          // now we can parse this into bytes
+          byte1 = payload1 >> 4;
+          byte2 = payload1 & 0x0f;
+          byte2 <<= 4;
+          byte2 |= ((payload2 & 0xf0) >> 4);
+          byte3 = payload2 & 0xff;
+          
+          // and store them in the payload
+          message_payload[message_payload_idx++] = byte1;
+          message_payload[message_payload_idx++] = byte2;
+          message_payload[message_payload_idx++] = byte3;
+          
+          if(byte1 == 0){ // this is a terminator packet
+            return IFG_SUCCESS;
+          }
+        }                
+      }           
     }
   }
   
-  return TIMEOUT;
+  return IFG_TIMEOUT;
 }
 
 uint32_t awaiting_msg_duration(void){
@@ -334,7 +346,7 @@ uint32_t awaiting_msg_duration(void){
 }
 
 IFG_StatusCode validate_and_decode_MSG(uint32_t packet0, uint32_t packet1){
-  IFG_StatusCode status_code = ERROR;
+  IFG_StatusCode status_code = IFG_ERROR;
   uint8_t temp[8] = {0};
   uint8_t ii = 0;
   uint16_t sum = 0;
@@ -352,23 +364,23 @@ IFG_StatusCode validate_and_decode_MSG(uint32_t packet0, uint32_t packet1){
   }
   
   if((sum & 0xff) != 0){
-    return ERROR; 
+    return IFG_ERROR; 
   }
   
   // at least the checksum is correct
   // am I the intended recipient?
   if(MY_ADDRESS != temp[4]){ // destination address is index 4 in the packet
-    return ERROR; 
+    return IFG_ERROR; 
   }
   
   // is the sender the last person who sent a REQ
   if(requesting_player_address != temp[3]){ // source address is index 3 in the packet
-    return ERROR; 
+    return IFG_ERROR; 
   }  
   
   // checksum is valid and I am the intended recipient
   if(PACKET_TYPE_MSG != temp[0]){ // packet type is index 0 of the packet
-    return ERROR;
+    return IFG_ERROR;
   }
   
   // looks good, lets go with it
@@ -376,5 +388,9 @@ IFG_StatusCode validate_and_decode_MSG(uint32_t packet0, uint32_t packet1){
   last_received_sequence_number <<= 8;
   last_received_sequence_number |= temp[2]; // lsb of sequence number is index 2 of the packet
   
-  return SUCCESS; 
+  return IFG_SUCCESS; 
+}
+
+uint8_t extract_packet_type(uint32_t packet){
+  return ((packet >> 24) & 0xff);
 }

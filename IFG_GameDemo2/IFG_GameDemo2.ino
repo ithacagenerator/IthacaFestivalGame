@@ -31,16 +31,16 @@ void loop(){
 }
 
 void do_action_with_ball(void){
-  IFG_StatusCode status = ERROR;
+  IFG_StatusCode status = IFG_ERROR;
   if(button_is_pressed()){
     status = attempt_message_transfer();
   }
   
-  if(status == SUCCESS){
+  if(status == IFG_SUCCESS){
     Ball_release();
     wait_for_button_released();
   }
-  else if(status == TIMEOUT){
+  else if(status == IFG_TIMEOUT){
     if(Ball_dropped()){
       LED_Red();
       spin_forever();
@@ -49,12 +49,12 @@ void do_action_with_ball(void){
 }
 
 void do_action_without_ball(void){
-  IFG_StatusCode status = ERROR;  
+  IFG_StatusCode status = IFG_ERROR;  
   if(button_is_pressed()){
     status = attempt_message_receive();
   }  
   
-  if(status == SUCCESS){
+  if(status == IFG_SUCCESS){
     Ball_possess();
     LED_White();
     wait_for_button_released();    

@@ -35,9 +35,9 @@
 
 
 typedef enum{
-  SUCCESS,   
-  TIMEOUT,
-  ERROR
+  IFG_SUCCESS,   
+  IFG_TIMEOUT,
+  IFG_ERROR
 } IFG_StatusCode;
 
 void spin_forever(void);

@@ -22,18 +22,22 @@ void Transport_transmit(uint32_t value){
   delay(20);
 }
 
-//TODO: add timeout argument, don't insta-fail
+// Transport_receive is called when there is a reasonable
+// expectation that a transmission is going to be received
+#define IR_RX_TIMEOUT_MS 50
+
 IFG_StatusCode Transport_receive(uint32_t * res){
-  IFG_StatusCode status_code = ERROR;
-  if (irrecv.decode(&results)) {
-    irrecv.resume(); // Receive the next value     
-    *res = results.value;
-    status_code = SUCCESS;
+  uint32_t timeout_timestamp = millis() + IR_RX_TIMEOUT_MS; // a time in the future
+
+  while(millis() < timeout_timestamp){
+    if (irrecv.decode(&results)) {
+      irrecv.resume(); // Receive the next value     
+      *res = results.value;
+      return IFG_SUCCESS;
+    }
   }
-  else{
-    status_code = TIMEOUT; 
-  }
-  return status_code;
+  
+  return IFG_TIMEOUT;
 }
 
 

@@ -26,5 +26,5 @@ uint32_t awaiting_msg_duration(void);
 IFG_StatusCode validate_and_decode_ACK(uint32_t packet0, uint32_t packet1);
 IFG_StatusCode validate_and_decode_REQ(uint32_t packet0, uint32_t packet1);
 IFG_StatusCode validate_and_decode_MSG(uint32_t packet0, uint32_t packet1);
-
+uint8_t extract_packet_type(uint32_t packet);
 #endif
