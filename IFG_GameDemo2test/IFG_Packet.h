@@ -17,6 +17,7 @@ void Packet_set_destination_address(uint8_t address);
 void Packet_set_payload_length(uint8_t payload_length);
 void Packet_set_payload_body(uint16_t body);
 void Packet_update_checksum(void);
+void Print_packet(void);
 uint8_t Packet_get_byte(uint8_t index);
 
 

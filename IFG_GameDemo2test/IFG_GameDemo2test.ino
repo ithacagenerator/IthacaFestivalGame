@@ -9,15 +9,15 @@
 #include "MessageLayer.h"
 #include "TransportLayer.h"
 
-#define IS_SENDER;
+#define IS_SENDER
 
 #ifdef IS_SENDER
-  #define MAX_TEST_ID = 3; // 4 message types to test
+  #define MAX_TEST_ID 3 // 4 message types to test
 #else
-  #define MAX_TEST_ID = 0;
+  #define MAX_TEST_ID 0
 #endif
 
-int test_id = 0;
+int test_id = 1;
 
 void setup(){
   IFG_DEBUG_BEGIN(115200);
@@ -31,13 +31,14 @@ void setup(){
 }
 
 void loop(){
-  if (button_is_pressed() ) {
-  	wait_for_button_released;
-  	if (MAX_TEST_ID < ++test_id) {
-  		test_id = MAX_TEST_ID
+  /* if (button_is_pressed() ) {
+  	wait_for_button_released();
+  	if (++test_id > MAX_TEST_ID) {
+  		test_id = MAX_TEST_ID;
   	}
-  }
-  run_test(test_id);
+  }*/
+  Run_test(test_id);
+  
 /*
   if(Ball_in_possession() == true){
     do_action_with_ball();
@@ -48,16 +49,30 @@ void loop(){
 */
 }
 
-void run_test(int test_id) {
+void Run_test(int test_id) {
+
+uint32_t temp;
+
 #ifdef IS_SENDER
-	switch (test_id)
+	switch (test_id) {
 	case 1:
-		send_REQ();
-		break;
+          Packet_set_type(1);
+          Packet_set_sequence_number(0x2345);
+          Packet_set_source_address(6);
+          Packet_set_destination_address(7);
+          Packet_set_payload_length(8);
+          Packet_set_payload_body(0x90AB);
+          Print_packet();
+          send_packet();
+	  break;
 	case 2:
 		//---
 		break;
+        }
 #else
+    if (IFG_SUCCESS == Transport_receive (&temp)) {
+      //Serial.println(temp, HEX);
+    }
 	// receive and report code
 #endif
 }

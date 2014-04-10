@@ -22,6 +22,10 @@
   #define IFG_DEBUG_PRINT(arg) do{  \
     Serial.print(arg); \
   }while(0)
+  
+ #define IFG_DEBUG_PRINT_HEX(arg) do{  \
+    Serial.print(arg,HEX); \
+  }while(0)
 
   #define IFG_DEBUG_PRINTLN(arg) do{  \
     Serial.println(arg); \
@@ -30,6 +34,7 @@
   // these could possibly be implemented using SoftwareSerial
   #define IFG_DEBUG_BEGIN(arg) do{}while(0)
   #define IFG_DEBUG_PRINT(arg) do{}while(0) 
+  #define IFG_DEBUG_PRINT_HEX(arg) do{} while(0)
   #define IFG_DEBUG_PRINTLN(arg) do{}while(0)   
 #endif
 

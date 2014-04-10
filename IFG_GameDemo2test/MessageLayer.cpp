@@ -106,7 +106,6 @@ void send_first_half_packet(){
   temp |= Packet_get_byte(2);
   temp <<= 8;  
   temp |= Packet_get_byte(3);  
-  
   Transport_transmit(temp);
 }
 
@@ -118,7 +117,6 @@ void send_second_half_packet(){
   temp |= Packet_get_byte(6);
   temp <<= 8;  
   temp |= Packet_get_byte(7);  
-  
   Transport_transmit(temp);
 }
 

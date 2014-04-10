@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include "TransportLayer.h"
 #include "IFG_Utility.h"
-#include <IRremote.h>
-#include <IRremoteInt.h>
+#include <IFG_IRremote.h>
+
+
 
 #if defined(__USING_ATMEGA328__)
 #define RECV_PIN 4
@@ -10,8 +11,8 @@
 
 #endif
 
-static IRrecv irrecv(RECV_PIN);
-static IRsend irsend;
+static IFG_IRrecv irrecv(RECV_PIN);
+static IFG_IRsend irsend;
 static decode_results results;
 
 void Transport_enable_receive(void){
@@ -19,8 +20,8 @@ void Transport_enable_receive(void){
 }
 
 void Transport_transmit(uint32_t value){
-  irsend.sendSony(value, 12);
-  delay(20);
+  irsend.sendSony(value, 32);
+  delay(40);
 }
 
 // Transport_receive is called when there is a reasonable
@@ -32,7 +33,8 @@ IFG_StatusCode Transport_receive(uint32_t * res){
 
   while(millis() < timeout_timestamp){
     if (irrecv.decode(&results)) {
-      irrecv.resume(); // Receive the next value     
+      irrecv.resume(); // Receive the next value  
+      Serial.println(results.value,HEX);   
       *res = results.value;
       return IFG_SUCCESS;
     }
