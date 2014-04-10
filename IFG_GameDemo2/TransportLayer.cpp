@@ -18,8 +18,8 @@ void Transport_enable_receive(void){
 }
 
 void Transport_transmit(uint32_t value){
-  irsend.sendSony(value, 12);
-  delay(20);
+  irsend.sendSony(value, 32);
+  delay(40);
 }
 
 // Transport_receive is called when there is a reasonable
