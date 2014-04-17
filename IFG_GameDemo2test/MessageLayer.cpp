@@ -47,7 +47,11 @@ void send_REQ(void){
   Packet_set_sequence_number(next_sequence_number());  
   Packet_set_source_address(MY_ADDRESS);
   Packet_set_destination_address(0);  
+  IFG_DEBUG_PRINT(millis());
+  IFG_DEBUG_PRINTLN(" Sending Packet");
   send_packet();  
+  IFG_DEBUG_PRINT(millis());
+  IFG_DEBUG_PRINTLN(" Packet Sent");  
   last_req_timestamp = millis();
 }
 
@@ -106,6 +110,7 @@ void send_first_half_packet(){
   temp |= Packet_get_byte(2);
   temp <<= 8;  
   temp |= Packet_get_byte(3);  
+  
   Transport_transmit(temp);
 }
 
@@ -117,6 +122,7 @@ void send_second_half_packet(){
   temp |= Packet_get_byte(6);
   temp <<= 8;  
   temp |= Packet_get_byte(7);  
+  
   Transport_transmit(temp);
 }
 
@@ -181,7 +187,7 @@ IFG_StatusCode wait_for_REQ(void){
   uint32_t temp1 = 0, temp2 = 0;
 
   status_code = Transport_receive(&temp1);
-  if(status_code != IFG_SUCCESS){ 
+  if(status_code != IFG_SUCCESS){   
     return IFG_TIMEOUT; // no packet, no problem
   }
   
@@ -190,6 +196,8 @@ IFG_StatusCode wait_for_REQ(void){
   // One way this can happen is if you are out of sync with
   // the transmitter and received the second half of a packet.
   if(extract_packet_type(temp1) != PACKET_TYPE_REQ){
+    IFG_DEBUG_PRINT(F("Error due to packet type "));
+    IFG_DEBUG_PRINTLN(extract_packet_type(temp1));
     return IFG_ERROR; 
   }
     
@@ -197,17 +205,21 @@ IFG_StatusCode wait_for_REQ(void){
   // the second half of the packet
   status_code = Transport_receive(&temp2);
   if(status_code != IFG_SUCCESS){
+    IFG_DEBUG_PRINTLN(F("TIMEOUT waiting for second part"));
     return IFG_TIMEOUT;
   }
   
   // At this point temp1, temp2 *may* hold a valid REQ packet
   status_code = validate_and_decode_REQ(temp1, temp2);    
   if(status_code != IFG_SUCCESS){
+    IFG_DEBUG_PRINT(F("Error due to decode - status code =  "));
+    IFG_DEBUG_PRINTLN(status_code);
     return IFG_ERROR; 
   }
 
   // all set, the requesting_player_address and last_received_sequence_number
-  // state variables were populated by validate_and_decode_REQ  
+  // state variables were populated by validate_and_decode_REQ 
+  IFG_DEBUG_PRINTLN(F("Returning Success")); 
   return IFG_SUCCESS;
 }
 
@@ -219,12 +231,18 @@ IFG_StatusCode validate_and_decode_REQ(uint32_t first_half_packet, uint32_t seco
   
   // REQ packets are supposed to have a destination address of 0
   if(0 != extract_destination_address(second_half_packet)){ 
+    IFG_DEBUG_PRINTLN(F("Error: REQ packet with non-zero destination"));
     return IFG_ERROR; 
   }
   
   // looks good, lets go with it
   requesting_player_address     = extract_source_address(first_half_packet);
   last_received_sequence_number = extract_sequence_number(first_half_packet);
+
+  IFG_DEBUG_PRINT(F("Requesting Player Address: "));
+  IFG_DEBUG_PRINTLN(requesting_player_address);
+  IFG_DEBUG_PRINT(F("Last Sequence Number: "));
+  IFG_DEBUG_PRINTLN(last_received_sequence_number);  
   
   return IFG_SUCCESS;
 }
@@ -306,6 +324,8 @@ IFG_StatusCode validate_and_decode_Packet(uint8_t expected_packet_type, uint32_t
   
   // checksum has to be zero, by definition / construction
   if(checksum != 0){
+    IFG_DEBUG_PRINT(F("Error: Checksum = "));
+    IFG_DEBUG_PRINTLN(checksum);
     return IFG_ERROR; 
   }
   
@@ -313,12 +333,18 @@ IFG_StatusCode validate_and_decode_Packet(uint8_t expected_packet_type, uint32_t
   // am I the intended recipient?
   if(expected_packet_type != PACKET_TYPE_REQ){ // REQ packets are not addressed
     if(MY_ADDRESS != extract_destination_address(second_half_packet)){
+      IFG_DEBUG_PRINT(F("Error: Unexpected destination address - "));
+      IFG_DEBUG_PRINTLN(extract_destination_address(second_half_packet));
       return IFG_ERROR; 
     }
   }  
   
   // checksum is valid and I am the intended recipient
   if(expected_packet_type != extract_packet_type(first_half_packet)){
+    IFG_DEBUG_PRINT(F("Error: Unexpected Packet Type - "));
+    IFG_DEBUG_PRINT(extract_packet_type(first_half_packet));
+    IFG_DEBUG_PRINT(F(" != "));
+    IFG_DEBUG_PRINTLN(expected_packet_type);
     return IFG_ERROR;
   }
   

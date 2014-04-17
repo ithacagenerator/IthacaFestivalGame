@@ -41,7 +41,7 @@ void loop(){
 void Run_test(int test_id) {
 
 uint32_t temp;
-        
+
 #ifdef IS_SENDER
 	switch (test_id) {
 	case 1:
@@ -55,14 +55,16 @@ uint32_t temp;
           send_packet();
 	  break;
 	case 2:
-          delay (20);
+          delay (500);
           send_REQ();
+          Print_packet();
 	  break;
         }
 #else
   switch (test_id) {
     case 1:
       if (IFG_SUCCESS == Transport_receive (&temp)) {
+        Serial.print("Test 1: ");
         Serial.println(temp, HEX);
       }
       break;
@@ -70,8 +72,6 @@ uint32_t temp;
       delay (20);
       if (IFG_SUCCESS == wait_for_REQ ()) {
         Serial.println("REQ recieved");
-      } else {
-        // Serial.println("Nothing recieved");
       }
       break;
     } 

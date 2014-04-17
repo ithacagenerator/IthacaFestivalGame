@@ -26,7 +26,10 @@ void Transport_transmit(uint32_t value){
 
 // Transport_receive is called when there is a reasonable
 // expectation that a transmission is going to be received
-#define IR_RX_TIMEOUT_MS 50
+// the timeout *must* be at least the inter-transmit intra-
+// packet delay + the transmit interval so at least about 65ms
+// otherwise second half packets always timeout
+#define IR_RX_TIMEOUT_MS 80
 
 IFG_StatusCode Transport_receive(uint32_t * res){
   uint32_t timeout_timestamp = millis() + IR_RX_TIMEOUT_MS; // a time in the future
@@ -34,7 +37,6 @@ IFG_StatusCode Transport_receive(uint32_t * res){
   while(millis() < timeout_timestamp){
     if (irrecv.decode(&results)) {
       irrecv.resume(); // Receive the next value  
-      Serial.println(results.value,HEX);   
       *res = results.value;
       return IFG_SUCCESS;
     }
