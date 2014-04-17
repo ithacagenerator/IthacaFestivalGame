@@ -11,11 +11,14 @@
 
 //#define IS_SENDER
 
-int test_id = 1;
+int test_id = 2;
 
 void setup(){
   IFG_DEBUG_BEGIN(115200);
   IFG_DEBUG_PRINTLN(F("Ithaca Festival Game"));
+  Serial.print("Test running: ");
+  Serial.println(test_id);
+
 
   Transport_enable_receive(); // start the receiver
   PushButton_Init();
@@ -38,9 +41,7 @@ void loop(){
 void Run_test(int test_id) {
 
 uint32_t temp;
-
-test_id = 2;
-
+        
 #ifdef IS_SENDER
 	switch (test_id) {
 	case 1:
@@ -70,7 +71,7 @@ test_id = 2;
       if (IFG_SUCCESS == wait_for_REQ ()) {
         Serial.println("REQ recieved");
       } else {
-        Serial.println("Nothing recieved");
+        // Serial.println("Nothing recieved");
       }
       break;
     } 
