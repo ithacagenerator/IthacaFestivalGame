@@ -11,7 +11,7 @@
 
 //#define IS_SENDER
 
-int test_id = 1;
+int test_id = 2;
 
 void setup(){
   IFG_DEBUG_BEGIN(115200);
@@ -39,8 +39,6 @@ void Run_test(int test_id) {
 
 uint32_t temp;
 
-test_id = 2;
-
 #ifdef IS_SENDER
 	switch (test_id) {
 	case 1:
@@ -54,14 +52,16 @@ test_id = 2;
           send_packet();
 	  break;
 	case 2:
-          delay (20);
+          delay (500);
           send_REQ();
+          Print_packet();
 	  break;
         }
 #else
   switch (test_id) {
     case 1:
       if (IFG_SUCCESS == Transport_receive (&temp)) {
+        Serial.print("Test 1: ");
         Serial.println(temp, HEX);
       }
       break;
@@ -69,8 +69,6 @@ test_id = 2;
       delay (20);
       if (IFG_SUCCESS == wait_for_REQ ()) {
         Serial.println("REQ recieved");
-      } else {
-        Serial.println("Nothing recieved");
       }
       break;
     } 
