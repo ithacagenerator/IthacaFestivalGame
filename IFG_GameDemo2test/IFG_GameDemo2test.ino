@@ -9,13 +9,7 @@
 #include "MessageLayer.h"
 #include "TransportLayer.h"
 
-#define IS_SENDER
-
-#ifdef IS_SENDER
-  #define MAX_TEST_ID 3 // 4 message types to test
-#else
-  #define MAX_TEST_ID 0
-#endif
+//#define IS_SENDER
 
 int test_id = 1;
 
@@ -39,14 +33,6 @@ void loop(){
   }*/
   Run_test(test_id);
   
-/*
-  if(Ball_in_possession() == true){
-    do_action_with_ball();
-  }
-  else if(Ball_in_possession() == false){
-    do_action_without_ball();
-  }
-*/
 }
 
 void Run_test(int test_id) {
@@ -66,45 +52,26 @@ uint32_t temp;
           send_packet();
 	  break;
 	case 2:
-		//---
-		break;
+          delay (20);
+          send_REQ();
+	  break;
         }
 #else
-    if (IFG_SUCCESS == Transport_receive (&temp)) {
-      //Serial.println(temp, HEX);
-    }
-	// receive and report code
+  switch (test_id) {
+    case 1:
+      if (IFG_SUCCESS == Transport_receive (&temp)) {
+        Serial.println(temp, HEX);
+      }
+      break;
+    case 2:
+      delay (20);
+      if (IFG_SUCCESS == wait_for_REQ ()) {
+        Serial.println("REQ recieved");
+      } else {
+        Serial.println("Nothing recieved");
+      }
+      break;
+    } 
 #endif
 }
-/*
-void do_action_with_ball(void){
-  IFG_StatusCode status = IFG_ERROR;
-  if(button_is_pressed()){
-    status = attempt_message_transfer();
-  }
-  
-  if(status == IFG_SUCCESS){
-    Ball_release();
-    wait_for_button_released();
-  }
-  else if(status == IFG_TIMEOUT){
-    if(Ball_dropped()){
-      LED_Red();
-      spin_forever();
-    }
-  }
-}
 
-void do_action_without_ball(void){
-  IFG_StatusCode status = IFG_ERROR;  
-  if(button_is_pressed()){
-    status = attempt_message_receive();
-  }  
-  
-  if(status == IFG_SUCCESS){
-    Ball_possess();
-    LED_White();
-    wait_for_button_released();    
-  }
-}
-*/
