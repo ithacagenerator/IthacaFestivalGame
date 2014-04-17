@@ -53,6 +53,8 @@ void Run_test(int test_id) {
 
 uint32_t temp;
 
+test_id = 2;
+
 #ifdef IS_SENDER
 	switch (test_id) {
 	case 1:
@@ -66,13 +68,23 @@ uint32_t temp;
           send_packet();
 	  break;
 	case 2:
+          send_REQ();
 		//---
 		break;
         }
 #else
-    if (IFG_SUCCESS == Transport_receive (&temp)) {
-      //Serial.println(temp, HEX);
-    }
+    switch (test_id) {
+	case 1:
+          if (IFG_SUCCESS == Transport_receive (&temp)) {
+            //Serial.println(temp, HEX);
+          }
+          break;
+        case 2:
+          if (IFG_SUCCESS == wait_For_REQ ()) {
+            Serial.println("Received REQ");
+          }
+          break;
+    
 	// receive and report code
 #endif
 }

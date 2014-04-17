@@ -10,6 +10,7 @@
 // payload is an array of {address[1 byte], count_msb[1 byte], count_lsb[1byte]} x NUM_PLAYERS
 #define MESSAGE_PAYLOAD_SIZE (NUM_PLAYERS_TOTAL * 3)
 
+
 IFG_StatusCode attempt_message_receive(void);
 IFG_StatusCode attempt_message_transfer(void);
 void send_REQ(void);
