@@ -234,12 +234,18 @@ IFG_StatusCode validate_and_decode_REQ(uint32_t first_half_packet, uint32_t seco
   
   // REQ packets are supposed to have a destination address of 0
   if(0 != extract_destination_address(second_half_packet)){ 
+    IFG_DEBUG_PRINTLN(F("Error: REQ packet with non-zero destination"));
     return IFG_ERROR; 
   }
   
   // looks good, lets go with it
   requesting_player_address     = extract_source_address(first_half_packet);
   last_received_sequence_number = extract_sequence_number(first_half_packet);
+
+  IFG_DEBUG_PRINT(F("Requesting Player Address: "));
+  IFG_DEBUG_PRINTLN(requesting_player_address);
+  IFG_DEBUG_PRINT(F("Last Sequence Number: "));
+  IFG_DEBUG_PRINTLN(last_received_sequence_number);  
   
   return IFG_SUCCESS;
 }
