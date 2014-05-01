@@ -9,9 +9,9 @@
 #define __USING_ATMEGA328__
 //#define __USING_ATTINY84__
 
-//#define DEBUG_ENABLED 
+#define DEBUG_ENABLED 
 
-#ifdef DEBUG_ENABLED  
+#ifdef DEBUG_ENABLED
   #include <HardwareSerial.h>
   extern HardwareSerial Serial;
   
@@ -22,32 +22,27 @@
   #define IFG_DEBUG_PRINT(arg) do{  \
     Serial.print(arg); \
   }while(0)
+  
+ #define IFG_DEBUG_PRINT_HEX(arg) do{  \
+    Serial.print(arg,HEX); \
+  }while(0)
 
   #define IFG_DEBUG_PRINTLN(arg) do{  \
     Serial.println(arg); \
   }while(0)  
-  
-  #define IFG_DEBUG_PRINT_HEX(arg) do{  \
-    Serial.print(arg, HEX); \
-  }while(0)
-
-  #define IFG_DEBUG_PRINTLN_HEX(arg) do{  \
-    Serial.println(arg, HEX); \
-  }while(0)   
 #else
   // these could possibly be implemented using SoftwareSerial
   #define IFG_DEBUG_BEGIN(arg) do{}while(0)
   #define IFG_DEBUG_PRINT(arg) do{}while(0) 
-  #define IFG_DEBUG_PRINTLN(arg) do{}while(0) 
-  #define IFG_DEBUG_PRINT_HEX(arg) do{}while(0)
-  #define IFG_DEBUG_PRINTLN_HEX(arg) do{}while(0)   
+  #define IFG_DEBUG_PRINT_HEX(arg) do{} while(0)
+  #define IFG_DEBUG_PRINTLN(arg) do{}while(0)   
 #endif
 
 
 typedef enum{
-  IFG_SUCCESS,   
-  IFG_TIMEOUT,
-  IFG_ERROR
+  IFG_SUCCESS = 0,   
+  IFG_TIMEOUT = 1,
+  IFG_ERROR = 2
 } IFG_StatusCode;
 
 void spin_forever(void);

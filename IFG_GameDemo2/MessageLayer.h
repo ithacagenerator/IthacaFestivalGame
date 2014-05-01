@@ -7,8 +7,9 @@
 
 #define COUNTER_BYTES_PER_PLAYER  2
 #define NUM_ADDRESS_BYTES         1
-// payload is an array of {address[1 byte], count_msb[1 byte], count_lsb[1byte]} x NUM_PLAYERS
+// payload is an array of {address[1 byte], count_msb[1 byte], count_lsb[1byte]} x (NUM_PLAYERS + 1)
 #define MESSAGE_PAYLOAD_SIZE (NUM_PLAYERS_TOTAL * 3)
+
 
 IFG_StatusCode attempt_message_receive(void);
 IFG_StatusCode attempt_message_transfer(void);
@@ -18,6 +19,9 @@ void send_ACK(void);
 void send_first_half_packet(void);
 void send_second_half_packet(void);
 void send_packet(void);
+void timestamp_REQ(void);
+void timestamp_ACK(void);
+
 IFG_StatusCode wait_for_Packet(uint8_t packet_type, uint32_t * p_first_half, uint32_t * p_second_half);
 IFG_StatusCode wait_for_ACK(void);
 IFG_StatusCode wait_for_REQ(void);

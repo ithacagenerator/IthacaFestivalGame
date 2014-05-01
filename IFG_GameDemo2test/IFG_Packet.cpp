@@ -49,7 +49,7 @@ void Packet_set_payload_length(uint8_t payload_length){
 void Packet_set_payload_body(uint16_t body){
   uint8_t temp = packet_buffer[5]; // store the current value
   temp &= 0xf0;                    // clear the lower 4-bits
-  temp |= (body >> 12) & 0x0f;     // stuff in the top 4-bits of body 
+  temp |= (body >> 8) & 0x0f;      // stuff in the top 4-bits of body 
   packet_buffer[5] = temp;         // write back the results to the buffer
   packet_buffer[6] = (body & 0xff);  
   Packet_update_checksum(); 

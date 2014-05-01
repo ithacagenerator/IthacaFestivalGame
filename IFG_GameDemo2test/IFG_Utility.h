@@ -1,7 +1,7 @@
 #ifndef ___IFG_UTILITY_H___
 #define ___IFG_UTILITY_H___
 
-#define NUM_PLAYERS_TOTAL 2  // up to 255
+#define NUM_PLAYERS_TOTAL 4  // up to 255
 #define MY_ADDRESS        72 // 8-bit address - zero is not allowed
 // TODO: Factor the address out as an initialization step through button press or something
 
@@ -40,9 +40,9 @@
 
 
 typedef enum{
-  IFG_SUCCESS,   
-  IFG_TIMEOUT,
-  IFG_ERROR
+  IFG_SUCCESS = 0,   
+  IFG_TIMEOUT = 1,
+  IFG_ERROR = 2
 } IFG_StatusCode;
 
 void spin_forever(void);
