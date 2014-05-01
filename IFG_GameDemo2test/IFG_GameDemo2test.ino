@@ -15,6 +15,9 @@ int test_id = 4;
 void setup(){
   IFG_DEBUG_BEGIN(115200);
   IFG_DEBUG_PRINTLN(F("Ithaca Festival Game"));
+  Serial.print("Test running: ");
+  Serial.println(test_id);
+
 
   Transport_enable_receive(); // start the receiver
   PushButton_Init();
