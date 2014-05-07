@@ -33,14 +33,61 @@
   
   #define IFG_DEBUG_PRINTLN_HEX(arg) do{  \
     Serial.println(arg, HEX); \
-  }while(0)   
+  }while(0)  
+ 
+  #define IFG_DEBUG_ZERO_PAD8(arg){ \
+    if((arg & 0xf0000000) == 0){ \
+       IFG_DEBUG_PRINT(0); \
+    } \
+    else if((arg & 0xff000000) == 0){ \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+    } \
+    else if((arg & 0xfff00000) == 0){ \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+    } \
+    else if((arg & 0xffff0000) == 0){ \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+    } \
+    else if((arg & 0xfffff000) == 0){ \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+    } \
+    else if((arg & 0xffffff00) == 0){ \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+    } \
+    else if((arg & 0xfffffff0) == 0){ \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+       IFG_DEBUG_PRINT(0); \
+    } \
+    IFG_DEBUG_PRINT_HEX(arg);    \
+  }while(0)
 #else
   // these could possibly be implemented using SoftwareSerial
   #define IFG_DEBUG_BEGIN(arg) do{}while(0)
   #define IFG_DEBUG_PRINT(arg) do{}while(0) 
   #define IFG_DEBUG_PRINT_HEX(arg) do{} while(0)
   #define IFG_DEBUG_PRINTLN(arg) do{}while(0)   
-  #define IFG_DEBUG_PRINTLN_HEX(arg) do{}while(0)    
+  #define IFG_DEBUG_PRINTLN_HEX(arg) do{}while(0)  
+  #define IFG_DEBUG_ZERO_PAD8(arg) do{} while(0)
 #endif
 
 

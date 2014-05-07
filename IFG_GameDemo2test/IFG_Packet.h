@@ -6,9 +6,10 @@
 #define NUM_PAYLOAD_BITS_PER_PACKET 12
 
 // valid values for PACKET TYPE field
-#define PACKET_TYPE_REQ 0x73
-#define PACKET_TYPE_ACK 0xAC
-#define PACKET_TYPE_MSG 0x43
+#define PACKET_TYPE_REQ   0x73
+#define PACKET_TYPE_ACK   0xAC
+#define PACKET_TYPE_MSG   0x43 // this is for the initial packet in the message
+#define PACKET_TYPE_MSG_N 0x55 // this is for subsequent packets in the message
 
 void Packet_set_type(uint8_t packet_type);
 void Packet_set_sequence_number(uint16_t sequence_number);

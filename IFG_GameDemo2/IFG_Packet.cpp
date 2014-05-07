@@ -74,10 +74,15 @@ uint8_t Packet_get_byte(uint8_t index){
   return 0;
 }
 
-void Print_packet (void) {
+void Print_packet(void) {
+  #ifdef DEBUG_ENABLED
   for (int i=0; i < PACKET_SIZE_BYTES; i++) {
+      if(Packet_get_byte(i) < 0x10){
+         IFG_DEBUG_PRINT(0);
+      }
       IFG_DEBUG_PRINT_HEX(Packet_get_byte(i));
       IFG_DEBUG_PRINT(" ");
   }
   IFG_DEBUG_PRINTLN("");
+  #endif
 }  

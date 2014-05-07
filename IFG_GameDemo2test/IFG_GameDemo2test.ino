@@ -9,17 +9,21 @@
 #include "MessageLayer.h"
 #include "TransportLayer.h"
 
-//#define IS_SENDER
+#define IS_SENDER
 int test_id = 4;
+uint32_t temp = 0xff;
 
 void setup(){  
   IFG_DEBUG_BEGIN(115200);
   IFG_DEBUG_PRINTLN(F("Ithaca Festival Game"));
+  #ifdef IS_SENDER
+  Serial.println("Sender");
+  #else 
+  Serial.println("Receiver");  
+  #endif
   Serial.print("Test running: ");
   Serial.println(test_id);
 
-
-  Transport_enable_receive(); // start the receiver
   PushButton_Init();
   LED_Init();
   
@@ -39,7 +43,6 @@ void loop(){
 
 void Run_test(int test_id) {
 
-uint32_t temp;
 IFG_StatusCode status_code;
 
 #ifdef IS_SENDER
@@ -52,24 +55,48 @@ IFG_StatusCode status_code;
           Packet_set_destination_address(0x89);
           Packet_set_payload_length(0xA);
           Packet_set_payload_body(0xBCD);
-          Print_packet();
           send_packet();
 	  break;
 	case 2:
-          delay(500);
+          // it seems as though the time between transmissions is highly relevant
+          // to the receiver being able to function at all
+          // shorter seems to be better, which leads me to believe not all
+          // transmissions are actually getting through
+          delay(20); 
           send_REQ();
-          Print_packet();
 	  break;
-        case 3:
-          delay(500);          
+        case 3:       
+          delay(20);          
           send_ACK();
-          Print_packet();
 	  break;
         case 4:
-          delay(5000);          
+          delay(20);          
           send_MSG();
           // TODO: print message buffer
 	  break;
+        case 5:
+          if(temp == 0){
+            if(IFG_SUCCESS == attempt_message_receive()){
+              Serial.println(F("Successful Message Receipt"));
+              temp = 1;
+              delay(1000);
+            }  
+            else{
+              //Serial.println(F("No Message Received"));
+            }            
+          }
+          else{
+            if(temp == 0xff){
+              Serial.println(F("Attempt Message Transfer"));
+              temp = 1;
+            }          
+          
+            if(IFG_SUCCESS == attempt_message_transfer()){
+              Serial.println(F("Successful Message Transfer"));
+              temp = 0;             
+            }        
+          } 
+          break;
         }
 #else
   switch (test_id) {
@@ -103,7 +130,30 @@ IFG_StatusCode status_code;
         Serial.println(")");
         // TODO: This seems to be failing every other time.
       }
-      break;      
+      break;  
+      case 5:    
+        if(temp == 0){
+          if(IFG_SUCCESS == attempt_message_transfer()){
+            Serial.println(F("Successful Message Transfer"));
+            temp = 1;             
+          }
+        }
+        else{
+          if(temp == 0xff){
+            Serial.println(F("Attempt Message Receipt"));
+            temp = 1;
+          }
+          
+          if(IFG_SUCCESS == attempt_message_receive()){
+            Serial.println(F("Successful Message Receipt"));
+            temp = 0;
+            delay(1000);
+          }            
+          else{
+            //Serial.println(F("No Message Received"));
+          }          
+        }        
+        break;      
     } 
 #endif
 }

@@ -12,13 +12,16 @@ static uint8_t acknowledging_player_address = MY_ADDRESS;   // source address as
 static uint8_t requesting_player_address = MY_ADDRESS;      // source address associated with last received REQ
 static uint32_t last_req_timestamp = 0;                     // the timestamp when the last REQ packet was sent
 static uint32_t last_ack_timestamp = 0;                     // the timestamp when the last ACK packet was sent
+static uint8_t is_receiver = 0;
 
+#define NUM_RETRANSMIS (3)
 
 IFG_StatusCode attempt_message_receive(void){
-  IFG_StatusCode status_code = IFG_ERROR;
-  status_code = wait_for_REQ();
+  IFG_StatusCode status_code = IFG_ERROR;   
+  uint8_t ii = 0;    
+  status_code = wait_for_REQ();  
   if(status_code == IFG_SUCCESS){
-    send_ACK();
+    for(ii = 0; ii < NUM_RETRANSMIS; ii++) send_ACK();       
     status_code = wait_for_MSG();
     if(status_code == IFG_SUCCESS){
       //The message has been received!
@@ -30,12 +33,13 @@ IFG_StatusCode attempt_message_receive(void){
 }
 
 IFG_StatusCode attempt_message_transfer(void){
-  IFG_StatusCode status_code = IFG_ERROR;
-  
-  send_REQ();
+  uint8_t ii = 0; 
+  IFG_StatusCode status_code = IFG_ERROR;  
+  for(ii = 0; ii < NUM_RETRANSMIS; ii++) send_REQ();   
   status_code = wait_for_ACK();
   if(status_code == IFG_SUCCESS){
-    send_MSG();
+    delay(80);    
+    for(ii = 0; ii < NUM_RETRANSMIS; ii++) send_MSG();
     return IFG_SUCCESS;
   }  
   
@@ -48,11 +52,11 @@ void send_REQ(void){
   Packet_set_source_address(MY_ADDRESS);
   Packet_set_destination_address(0);  
   IFG_DEBUG_PRINT(millis());
-  IFG_DEBUG_PRINTLN(" Sending Packet");
+  IFG_DEBUG_PRINTLN(F(" Sending REQ Packet"));
   send_packet();  
   IFG_DEBUG_PRINT(millis());
-  IFG_DEBUG_PRINTLN(" Packet Sent");  
-  timestamp_REQ();
+  IFG_DEBUG_PRINTLN(F(" Packet REQ Sent"));  
+  timestamp_REQ();   
 }
 
 void send_MSG(void){ 
@@ -71,7 +75,7 @@ void send_MSG(void){
   // the array is variable length, terminated by an entry with address 0
   // this would be harder if total packet length were arbitrary
   IFG_DEBUG_PRINT(millis());
-  IFG_DEBUG_PRINTLN(" Sending MSG Packet");  
+  IFG_DEBUG_PRINTLN(F(" Sending MSG Packet"));  
   Print_packet();
   while((message_index < MESSAGE_PAYLOAD_SIZE)){        
     // there will be two send packets resulting from this loop
@@ -83,6 +87,8 @@ void send_MSG(void){
     Print_packet();     
     send_packet();   
 
+    Packet_set_type(PACKET_TYPE_MSG_N);
+
     // new packet, notice = operator
     temp = (message_payload[message_index++] & 0x0f);       // start with the bottom four bits
     temp <<= 8;                                             // make room for 8-bits
@@ -92,7 +98,7 @@ void send_MSG(void){
     send_packet();
   }
   IFG_DEBUG_PRINT(millis());
-  IFG_DEBUG_PRINTLN(" Sent MSG Packet");      
+  IFG_DEBUG_PRINTLN(F(" Sent MSG Packet"));      
 }
 
 
@@ -102,11 +108,11 @@ void send_ACK(void){
   Packet_set_source_address(MY_ADDRESS);
   Packet_set_destination_address(requesting_player_address);  
   IFG_DEBUG_PRINT(millis());
-  IFG_DEBUG_PRINTLN(" Sending Packet");  
+  IFG_DEBUG_PRINTLN(F(" Sending ACK Packet"));  
   send_packet();
   IFG_DEBUG_PRINT(millis());
-  IFG_DEBUG_PRINTLN(" Packet Sent");
-  timestamp_ACK();
+  IFG_DEBUG_PRINTLN(F(" Packet ACK Sent"));
+  timestamp_ACK();  
 }
 
 void send_first_half_packet(){
@@ -134,11 +140,13 @@ void send_second_half_packet(){
 }
 
 void send_packet(){
+  is_receiver = 0;
   send_first_half_packet();
   send_second_half_packet();
+  Print_packet();  
 }
 
-#define ACK_TIMEOUT_DURATION_MS 500
+#define ACK_TIMEOUT_DURATION_MS 200
 
 IFG_StatusCode wait_for_ACK(){
   IFG_StatusCode status_code = IFG_ERROR;
@@ -154,7 +162,7 @@ IFG_StatusCode wait_for_ACK(){
     }
   }
 
-  IFG_DEBUG_PRINTLN(F("Error due to Timeout "));
+  //IFG_DEBUG_PRINTLN(F("Error due to Timeout "));
   return IFG_TIMEOUT;
 }
 
@@ -200,6 +208,7 @@ IFG_StatusCode wait_for_REQ(void){
   // all set, the requesting_player_address and last_received_sequence_number
   // state variables were populated by validate_and_decode_REQ 
   IFG_DEBUG_PRINTLN(F("Returning Success")); 
+  
   return IFG_SUCCESS;
 }
 
@@ -234,6 +243,8 @@ IFG_StatusCode wait_for_MSG(){
   uint16_t packet_counter = 0;
   uint32_t first_half_packet = 0, second_half_packet = 0;
   
+  uint8_t waiting_for_packet_type = PACKET_TYPE_MSG;
+  
   uint16_t payload_body = 0;
   uint8_t  byte1 = 0, byte2 = 0, byte3 = 0;  
 
@@ -245,11 +256,12 @@ IFG_StatusCode wait_for_MSG(){
   // (3) you run out of time waiting for MSG packets and return IFG_TIME
   while(awaiting_msg_duration() < MSG_TIMEOUT_DURATION_MS){
     
-    status_code = wait_for_Packet(PACKET_TYPE_MSG, &first_half_packet, &second_half_packet);
+    status_code = wait_for_Packet(waiting_for_packet_type, &first_half_packet, &second_half_packet);
 
     // packets come in pairs for MSG sequences
     if(status_code == IFG_SUCCESS){
       timestamp_ACK();
+      waiting_for_packet_type = PACKET_TYPE_MSG_N;
       
       status_code = validate_and_decode_MSG(first_half_packet, second_half_packet);
       if(status_code == IFG_ERROR){
@@ -353,10 +365,20 @@ uint16_t next_sequence_number(void){
 IFG_StatusCode wait_for_Packet(uint8_t packet_type, uint32_t * p_first_half, uint32_t * p_second_half){
   IFG_StatusCode status_code = IFG_ERROR;
 
+  if(is_receiver == 0){
+    IFG_DEBUG_PRINTLN(F("Becoming Receiver"));
+    Transport_enable_receive();
+    delay(500);
+    is_receiver = 1;
+  }
+  
   status_code = Transport_receive(p_first_half);
   if(status_code != IFG_SUCCESS){            
     return IFG_TIMEOUT; // no packet, no problem
   }
+  
+  //IFG_DEBUG_PRINT(F("1/2 Packet Rx: "));
+  //IFG_DEBUG_PRINT_HEX((uint32_t) (*p_first_half));   
   
   // We might have just got the first half of a packet  
   // it had better be the expected type, otherwise bail out.
@@ -384,9 +406,10 @@ IFG_StatusCode wait_for_Packet(uint8_t packet_type, uint32_t * p_first_half, uin
     return status_code; 
   }
   
-  IFG_DEBUG_PRINT(F("Packet Rx: "));
-  IFG_DEBUG_PRINT_HEX((uint32_t) (*p_first_half));  
-  IFG_DEBUG_PRINTLN_HEX((uint32_t) (*p_second_half));             
+  IFG_DEBUG_PRINT(F("Packet Rx: "));  
+  IFG_DEBUG_ZERO_PAD8((uint32_t) (*p_first_half));  
+  IFG_DEBUG_ZERO_PAD8((uint32_t) (*p_second_half));    
+  IFG_DEBUG_PRINTLN("");
 
   return IFG_SUCCESS;  
 }

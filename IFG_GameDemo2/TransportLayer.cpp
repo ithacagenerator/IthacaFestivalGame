@@ -16,7 +16,7 @@ static IFG_IRsend irsend;
 static decode_results results;
 
 void Transport_enable_receive(void){
-  irrecv.enableIRIn(); 
+  irrecv.enableIRIn();   
 }
 
 void Transport_transmit(uint32_t value){
