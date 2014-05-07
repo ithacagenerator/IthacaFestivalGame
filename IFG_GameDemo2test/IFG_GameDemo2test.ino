@@ -9,10 +9,10 @@
 #include "MessageLayer.h"
 #include "TransportLayer.h"
 
-#define IS_SENDER
+//#define IS_SENDER
 int test_id = 4;
 
-void setup(){
+void setup(){  
   IFG_DEBUG_BEGIN(115200);
   IFG_DEBUG_PRINTLN(F("Ithaca Festival Game"));
   Serial.print("Test running: ");

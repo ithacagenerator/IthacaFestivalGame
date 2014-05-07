@@ -7,7 +7,7 @@
 
 #define COUNTER_BYTES_PER_PLAYER  2
 #define NUM_ADDRESS_BYTES         1
-// payload is an array of {address[1 byte], count_msb[1 byte], count_lsb[1byte]} x (NUM_PLAYERS + 1)
+// payload is an array of {address[1 byte], count_msb[1 byte], count_lsb[1byte]} x NUM_PLAYERS
 #define MESSAGE_PAYLOAD_SIZE (NUM_PLAYERS_TOTAL * 3)
 
 

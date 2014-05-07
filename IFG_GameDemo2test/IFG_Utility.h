@@ -1,8 +1,8 @@
 #ifndef ___IFG_UTILITY_H___
 #define ___IFG_UTILITY_H___
 
-#define NUM_PLAYERS_TOTAL 4  // up to 255
-#define MY_ADDRESS        72 // 8-bit address - zero is not allowed
+#define NUM_PLAYERS_TOTAL 2  // up to 255
+#define MY_ADDRESS        0x39 // 8-bit address - zero is not allowed
 // TODO: Factor the address out as an initialization step through button press or something
 
 // only define one of the __USING_ATMEGA328__ or __USING_ATTINY84__
@@ -30,12 +30,17 @@
   #define IFG_DEBUG_PRINTLN(arg) do{  \
     Serial.println(arg); \
   }while(0)  
+  
+  #define IFG_DEBUG_PRINTLN_HEX(arg) do{  \
+    Serial.println(arg, HEX); \
+  }while(0)   
 #else
   // these could possibly be implemented using SoftwareSerial
   #define IFG_DEBUG_BEGIN(arg) do{}while(0)
   #define IFG_DEBUG_PRINT(arg) do{}while(0) 
   #define IFG_DEBUG_PRINT_HEX(arg) do{} while(0)
   #define IFG_DEBUG_PRINTLN(arg) do{}while(0)   
+  #define IFG_DEBUG_PRINTLN_HEX(arg) do{}while(0)    
 #endif
 
 
