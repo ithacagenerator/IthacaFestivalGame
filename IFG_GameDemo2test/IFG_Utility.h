@@ -9,7 +9,7 @@
 #define __USING_ATMEGA328__
 //#define __USING_ATTINY84__
 
-#define DEBUG_ENABLED 
+//#define DEBUG_ENABLED 
 
 #ifdef DEBUG_ENABLED
   #include <HardwareSerial.h>

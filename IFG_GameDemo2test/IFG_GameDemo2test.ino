@@ -10,12 +10,12 @@
 #include "TransportLayer.h"
 
 #define IS_SENDER
-int test_id = 4;
+int test_id = 7;
 uint32_t temp = 0xff;
 
 void setup(){  
-  IFG_DEBUG_BEGIN(115200);
-  IFG_DEBUG_PRINTLN(F("Ithaca Festival Game"));
+  Serial.begin(115200);
+  Serial.println(F("Ithaca Festival Game"));
   #ifdef IS_SENDER
   Serial.println("Sender");
   #else 
@@ -62,11 +62,12 @@ IFG_StatusCode status_code;
           // to the receiver being able to function at all
           // shorter seems to be better, which leads me to believe not all
           // transmissions are actually getting through
-          delay(20); 
+          delay(2000); 
           send_REQ();
 	  break;
-        case 3:       
-          delay(20);          
+        case 6: // determine if receiver can ever hear an ACK after send_REQ call 
+        case 3:      
+          delay(2000);          
           send_ACK();
 	  break;
         case 4:
@@ -74,28 +75,42 @@ IFG_StatusCode status_code;
           send_MSG();
           // TODO: print message buffer
 	  break;
-        case 5:
-          if(temp == 0){
-            if(IFG_SUCCESS == attempt_message_receive()){
-              Serial.println(F("Successful Message Receipt"));
-              temp = 1;
-              delay(1000);
-            }  
-            else{
-              //Serial.println(F("No Message Received"));
-            }            
-          }
-          else{
-            if(temp == 0xff){
-              Serial.println(F("Attempt Message Transfer"));
-              temp = 1;
-            }          
+        case 5:          
+          if(temp == 0xff){
+            Serial.println(F("Attempt Message Transfer"));
+            temp = 1;
+          }          
           
-            if(IFG_SUCCESS == attempt_message_transfer()){
-              Serial.println(F("Successful Message Transfer"));
-              temp = 0;             
-            }        
-          } 
+          status_code = attempt_message_transfer();
+          if(IFG_SUCCESS == status_code){
+            Serial.println(F("Successful Message Transfer"));             
+          }    
+          else{
+            Serial.print(F("Transfer not sucessful - Status Code "));
+            Serial.println(status_code);
+          }    
+          break;
+        case 7:
+          temp = 0;
+          if(Serial.available()){
+            while(Serial.available()) Serial.read();
+            Serial.println(F("Keyboard Input"));
+            temp = 0xff; 
+          }
+          
+          if(temp == 0xff){
+            temp = 0;
+            Serial.println(F("Send REQ"));          
+            send_REQ();
+            Serial.println(F("Waiting for ACK"));
+            status_code = wait_for_ACK();
+            if(status_code == IFG_SUCCESS){
+              Serial.println(F("Got ACK"));
+              delay(500);
+              Serial.println(F("Send MSG"));
+              send_MSG();
+            }
+          }         
           break;
         }
 #else
@@ -112,6 +127,12 @@ IFG_StatusCode status_code;
         Serial.println("REQ recieved");
       }
       break;
+    case 6: // determine if receiver can ever hear an ACK after send_REQ call  
+      if(temp == 0xff){
+        Serial.println(F("Sending REQ"));
+        send_REQ();
+        temp = 0;
+      }
     case 3:
       timestamp_REQ();  
       if (IFG_SUCCESS == wait_for_ACK()) {
@@ -132,28 +153,37 @@ IFG_StatusCode status_code;
       }
       break;  
       case 5:    
-        if(temp == 0){
-          if(IFG_SUCCESS == attempt_message_transfer()){
-            Serial.println(F("Successful Message Transfer"));
-            temp = 1;             
-          }
+
+        if(temp == 0xff){
+          Serial.println(F("Attempt Message Receipt"));
+          temp = 1;
         }
+          
+        if(IFG_SUCCESS == attempt_message_receive()){
+          Serial.println(F("Successful Message Receipt"));
+        }            
         else{
-          if(temp == 0xff){
-            Serial.println(F("Attempt Message Receipt"));
-            temp = 1;
+          //Serial.println(F("No Message Received"));
+        }          
+        
+        break; 
+      case 7:
+        status_code = wait_for_REQ();
+        if(status_code == IFG_SUCCESS){
+          Serial.println(F("Got REQ"));
+
+          delay(500);
+          Serial.println(F("Send ACK"));
+          send_ACK();
+          
+          Serial.println(F("Waiting for MSG"));
+          status_code = wait_for_MSG();
+          if(status_code == IFG_SUCCESS){
+            Serial.println(F("MSG received")); 
           }
           
-          if(IFG_SUCCESS == attempt_message_receive()){
-            Serial.println(F("Successful Message Receipt"));
-            temp = 0;
-            delay(1000);
-          }            
-          else{
-            //Serial.println(F("No Message Received"));
-          }          
-        }        
-        break;      
+        }
+        break;    
     } 
 #endif
 }
