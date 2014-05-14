@@ -207,7 +207,7 @@ IFG_StatusCode wait_for_REQ(void){
 
   // all set, the requesting_player_address and last_received_sequence_number
   // state variables were populated by validate_and_decode_REQ 
-  IFG_DEBUG_PRINTLN(F("Returning Success")); 
+  //IFG_DEBUG_PRINTLN(F("Returning Success")); 
   
   return IFG_SUCCESS;
 }
@@ -368,7 +368,6 @@ IFG_StatusCode wait_for_Packet(uint8_t packet_type, uint32_t * p_first_half, uin
   if(is_receiver == 0){
     IFG_DEBUG_PRINTLN(F("Becoming Receiver"));
     Transport_enable_receive();
-    delay(500);
     is_receiver = 1;
   }
   

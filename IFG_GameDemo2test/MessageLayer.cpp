@@ -14,21 +14,19 @@ static uint32_t last_req_timestamp = 0;                     // the timestamp whe
 static uint32_t last_ack_timestamp = 0;                     // the timestamp when the last ACK packet was sent
 static uint8_t is_receiver = 0;
 
-#define NUM_REQ_RETRANSMITS (4)
-#define NUM_ACK_RETRANSMITS (4)
-#define NUM_MSG_RETRANSMITS (4)
+#define NUM_RETRANSMIS (3)
 
 IFG_StatusCode attempt_message_receive(void){
   IFG_StatusCode status_code = IFG_ERROR;   
   uint8_t ii = 0;    
   status_code = wait_for_REQ();  
-  if(status_code == IFG_SUCCESS){    
-    send_ACK();                        
+  if(status_code == IFG_SUCCESS){
+    for(ii = 0; ii < NUM_RETRANSMIS; ii++) send_ACK();       
     status_code = wait_for_MSG();
     if(status_code == IFG_SUCCESS){
       //The message has been received!
       //TODO: update the game state        
-    }    
+    }
   }
     
   return status_code;
@@ -37,10 +35,11 @@ IFG_StatusCode attempt_message_receive(void){
 IFG_StatusCode attempt_message_transfer(void){
   uint8_t ii = 0; 
   IFG_StatusCode status_code = IFG_ERROR;  
-  send_REQ();   
+  for(ii = 0; ii < NUM_RETRANSMIS; ii++) send_REQ();   
   status_code = wait_for_ACK();
-  if(status_code == IFG_SUCCESS){    
-    send_MSG();
+  if(status_code == IFG_SUCCESS){
+    delay(80);    
+    for(ii = 0; ii < NUM_RETRANSMIS; ii++) send_MSG();
     return IFG_SUCCESS;
   }  
   
@@ -147,7 +146,7 @@ void send_packet(){
   Print_packet();  
 }
 
-#define ACK_TIMEOUT_DURATION_MS 2000
+#define ACK_TIMEOUT_DURATION_MS 200
 
 IFG_StatusCode wait_for_ACK(){
   IFG_StatusCode status_code = IFG_ERROR;
@@ -237,7 +236,7 @@ IFG_StatusCode validate_and_decode_REQ(uint32_t first_half_packet, uint32_t seco
   return IFG_SUCCESS;
 }
 
-#define MSG_TIMEOUT_DURATION_MS 2000L
+#define MSG_TIMEOUT_DURATION_MS 1000L
 
 IFG_StatusCode wait_for_MSG(){
   IFG_StatusCode status_code = IFG_ERROR;
