@@ -10,8 +10,10 @@
 #include "TransportLayer.h"
 
 #define IS_SENDER
-int test_id = 7;
+int test_id = 8;
 uint32_t temp = 0xff;
+long previousMillis = 0; 
+long interval = 300;
 
 void setup(){  
   Serial.begin(115200);
@@ -42,6 +44,8 @@ void loop(){
 }
 
 void Run_test(int test_id) {
+  
+unsigned long currentMillis = millis();
 
 IFG_StatusCode status_code;
 
@@ -90,7 +94,7 @@ IFG_StatusCode status_code;
             Serial.println(status_code);
           }    
           break;
-        case 7:
+        case 7: // THIS NEVER WORKED RELIABLY
           temp = 0;
           if(Serial.available()){
             while(Serial.available()) Serial.read();
@@ -111,6 +115,22 @@ IFG_StatusCode status_code;
               send_MSG();
             }
           }         
+          break;
+        case 8: // Transmitter transmits MSG packets repeatedly for 300ms
+          interval = 300;
+        
+          if(currentMillis - previousMillis > interval) {
+            previousMillis = currentMillis;
+            
+            timestamp_REQ(); 
+            status_code = wait_for_ACK();
+            if(status_code == IFG_SUCCESS){
+              Serial.println("Got ACK"); 
+            }
+          }
+          
+          send_MSG();
+          
           break;
         }
 #else
@@ -167,7 +187,7 @@ IFG_StatusCode status_code;
         }          
         
         break; 
-      case 7:
+      case 7: // THIS NEVER WORKED RELIABLY
         status_code = wait_for_REQ();
         if(status_code == IFG_SUCCESS){
           Serial.println(F("Got REQ"));
@@ -184,6 +204,9 @@ IFG_StatusCode status_code;
           
         }
         break;    
+      case 8: // Receiver transmits ACK packets constantlyrepeatedly for 300ms
+        send_ACK();
+        break;        
     } 
 #endif
 }
