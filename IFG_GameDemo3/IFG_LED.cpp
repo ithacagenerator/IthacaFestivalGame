@@ -7,7 +7,9 @@
 #define GREEN_PIN  5
 #define BLUE_PIN  12
 #elif defined(__USING_ATTINY84__)
-
+#define RED_PIN    8
+#define GREEN_PIN  7
+#define BLUE_PIN   5
 #endif
 
 void LED_Init(void){

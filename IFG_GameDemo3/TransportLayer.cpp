@@ -8,7 +8,7 @@
 #if defined(__USING_ATMEGA328__)
 #define RECV_PIN 4
 #elif defined(__USING_ATTINY84__)
-
+#define RECV_PIN 10
 #endif
 
 static IFG_IRrecv irrecv(RECV_PIN);

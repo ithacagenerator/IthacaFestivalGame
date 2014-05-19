@@ -5,7 +5,7 @@
 #if defined(__USING_ATMEGA328__)
 #define PUSHBUTTON_PIN 8
 #elif defined(__USING_ATTINY84__)
-
+#define PUSHBUTTON_PIN 4
 #endif
 
 void PushButton_Init(void){
