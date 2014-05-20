@@ -474,3 +474,59 @@ void timestamp_ACK(void){
   last_ack_timestamp = millis();
 }
 
+// find the player_id in the message, and return the associated score
+// return zero if there is no score associated with the player_id yet
+uint16_t get_player_score(uint8_t player_id){
+  uint16_t player_score = 0;
+
+  for(uint8_t ii = 0; ii < MESSAGE_PAYLOAD_SIZE; ii+=3){
+    if(message_payload[ii] == player_id){
+      player_score = message_payload[ii+1];
+      player_score <<= 8;
+      player_score |= message_payload[ii+2];
+      break;
+    }
+  }
+  
+  return player_score;
+}
+
+// find the player_id in the message, and set her score
+void set_player_score(uint8_t player_id, uint16_t player_score){
+  boolean player_id_found = false;
+  uint8_t player_message_index = 0;
+  boolean empty_slot_found = false;
+  uint8_t first_empty_index = 0;
+
+  // Search the message for the player or an empty slot, whichever comes first
+  for(uint8_t ii = 0; ii < MESSAGE_PAYLOAD_SIZE; ii+=3){
+    if(message_payload[ii] == player_id){
+      player_id_found = true;
+      player_message_index = ii;
+      break;                           // if we found the player we're done searching
+    } 
+    else if(message_payload[ii] == 0){ // 0 is not a valid player_id, kind of a null terminator
+      first_empty_index = ii;          // messages are always packed so that valid player_ids come before empty slots
+      empty_slot_found = true;
+      break;                           // if we found an empty slot we're done searching
+    }
+  }    
+  
+  // Search complete, now alter the message fields 
+  if(player_id_found){
+    message_payload[player_message_index+1] = (player_score >> 8) & 0xff; //MSB
+    message_payload[player_message_index+2] = player_score & 0xff;        //LSB
+    IFG_DEBUG_PRINTLN(F("Player Found, setting score"));
+  }
+  else if(empty_slot_found){
+    message_payload[first_empty_index]   = player_id;
+    message_payload[first_empty_index+1] = (player_score >> 8) & 0xff; // MSB
+    message_payload[first_empty_index+2] = player_score & 0xff;        // LSB
+    IFG_DEBUG_PRINTLN(F("Empty Slot Found, setting score"));
+  }
+  else{
+    // we should never reach this state, or 
+    // more people are trying to play than there is space for in the message
+    IFG_DEBUG_PRINTLN(F("Too many players, set score ignored"));
+  }
+}

@@ -32,6 +32,8 @@ void setup(){
   //TODO: If fou are player one, you should star with the ball
   if(0){
     Ball_possess();
+    // TODO: Should the first player start with a point automatically?
+    // set_player_score(MY_ADDRESS, 1);
     LED_White();
   }
 }
@@ -127,6 +129,8 @@ void do_action_without_ball(void){
         LED_White();
         state = STATE_IDLE;
         IFG_DEBUG_PRINTLN(F("Going to state STATE_IDLE"));
+        // modify my own score now that I possess the ball
+        set_player_score(MY_ADDRESS, get_player_score(MY_ADDRESS) + 1);
         Ball_possess(); 
       }
       break; 
