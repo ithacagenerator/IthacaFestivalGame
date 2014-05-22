@@ -5,7 +5,8 @@
 #include "IFG_Utility.h"
 #include <stdint.h>
 
-static uint8_t message_payload[MESSAGE_PAYLOAD_SIZE] = {0x01,0x23,0x45,0xFE,0xDC,0xBA}; // the game state transmitted/modified from player to player
+//static uint8_t message_payload[MESSAGE_PAYLOAD_SIZE] = {0x01,0x23,0x45,0xFE,0xDC,0xBA}; // the game state transmitted/modified from player to player
+static uint8_t message_payload[MESSAGE_PAYLOAD_SIZE] = {0};
 static uint16_t message_payload_write_index = 0;            // where the next value should be written to
 static uint16_t last_received_sequence_number = 0;          // last received SEQENCE NUMBER
 static uint8_t acknowledging_player_address = MY_ADDRESS;   // source address associated with last received ACK
@@ -528,5 +529,27 @@ void set_player_score(uint8_t player_id, uint16_t player_score){
     // we should never reach this state, or 
     // more people are trying to play than there is space for in the message
     IFG_DEBUG_PRINTLN(F("Too many players, set score ignored"));
+  }
+}
+
+void message_pretty_print(void){
+  uint16_t player_score = 0;
+  for(uint8_t ii = 0; ii < MESSAGE_PAYLOAD_SIZE; ii+=3){
+    if(message_payload[ii] == 0){
+      if(ii == 0){
+        IFG_DEBUG_PRINTLN(F("No Scores Present"));
+      } 
+      return;
+    }
+    
+    player_score = message_payload[ii+1];
+    player_score <<= 8;
+    player_score |= message_payload[ii+2];
+    
+    IFG_DEBUG_PRINT(F("Player: "));
+    IFG_DEBUG_PRINT(message_payload[ii]);
+    IFG_DEBUG_PRINT(F(" Score: "));
+    IFG_DEBUG_PRINT(player_score);
+    IFG_DEBUG_PRINTLN(F(""));
   }
 }
