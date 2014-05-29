@@ -24,6 +24,7 @@ void timestamp_ACK(void);
 uint16_t get_player_score(uint8_t player_id);
 void set_player_score(uint8_t player_id, uint16_t player_score);
 void message_pretty_print(void);
+uint8_t compute_score(void);
 
 IFG_StatusCode wait_for_Packet(uint8_t packet_type, uint32_t * p_first_half, uint32_t * p_second_half);
 IFG_StatusCode wait_for_ACK(void);

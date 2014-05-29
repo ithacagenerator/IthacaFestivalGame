@@ -31,7 +31,7 @@ void setup(){
   LED_Init();
 
   //TODO: If you are player one, you should star with the ball
-  if(0){
+  if(1){
     Ball_possess();
     // TODO: Should the first player start with a point automatically?
     // set_player_score(MY_ADDRESS, 1);
@@ -117,7 +117,7 @@ void do_action_without_ball(void){
         //LED_Red();
       }
     }
-
+    
     break;
   case STATE_TXACK:
     send_ACK();

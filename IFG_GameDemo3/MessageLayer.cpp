@@ -553,3 +553,41 @@ void message_pretty_print(void){
     IFG_DEBUG_PRINTLN(F(""));
   }
 }
+
+// two points for equal possessions
+// if the ball is passed 8 times, the score is 1
+// if the score is 1 and each player had the ball twice, the score is 2
+// otherwise the score is zero
+uint8_t compute_score(void){
+  uint16_t total_score = 0;
+  uint8_t game_score = 0;
+  uint8_t num_players = 0;
+  uint8_t player_scores_are_equal = 1;  
+  uint16_t current_player_score = 0;
+  uint16_t last_player_score = 0;
+  for(uint8_t ii = 0; ii < MESSAGE_PAYLOAD_SIZE; ii+=3){
+    if(message_payload[ii] == 0){
+      break;
+    }
+    
+    current_player_score = get_player_score(message_payload[ii]);
+    
+    if((ii > 0) && (last_player_score != current_player_score)){
+       player_scores_are_equal = 0;
+    }
+    
+    last_player_score = current_player_score;
+    num_players++;
+    total_score += current_player_score;
+  }  
+  
+  if((total_score >= 8) && (num_players == NUM_PLAYERS_TOTAL)){
+    game_score = 1;
+  }
+  
+  if((game_score == 1) && (player_scores_are_equal == 1)){
+    game_score = 2;
+  }
+  
+  return game_score;
+}
