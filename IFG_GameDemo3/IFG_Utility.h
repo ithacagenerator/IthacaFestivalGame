@@ -5,6 +5,8 @@
 #define MY_ADDRESS        0x39 // 8-bit address - zero is not allowed
 // TODO: Factor the address out as an initialization step through button press or something
 
+#define IS_SCORE_BOARD  // defined if this is the scoreboard
+
 // only define one of the __USING_ATMEGA328__ or __USING_ATTINY84__
 #define __USING_ATMEGA328__
 //#define __USING_ATTINY84__

@@ -6,6 +6,9 @@
 #include "IFG_Ball.h"
 #include "MessageLayer.h"
 #include "TransportLayer.h"
+#ifdef IS_SCORE_BOARD
+#include <Adafruit_NeoPixal.h>
+#endif
 
 void do_action_with_ball(void);
 void do_action_without_ball(void);
@@ -18,9 +21,13 @@ void do_action_without_ball(void);
 #define STATE_RXMSG           6
 #define STATE_SPIN            7
 
+#define SCORE_COUNT           8 // Can have up to 8 scores
+
 uint8_t state = STATE_IDLE;
 long previousMillis = 0; 
 long interval = 300;
+
+void display_score ( void );
 
 void setup(){
   IFG_DEBUG_BEGIN(115200);
@@ -131,6 +138,7 @@ void do_action_without_ball(void){
     status_code = wait_for_MSG();
     interval = 10000; // 10 seconds timeout
     if(status_code == IFG_SUCCESS){
+      #ifndef IS_SCORE_BOARD 
       LED_White();
       state = STATE_IDLE;
       IFG_DEBUG_PRINTLN(F("Going to state STATE_IDLE"));
@@ -138,6 +146,14 @@ void do_action_without_ball(void){
       set_player_score(MY_ADDRESS, get_player_score(MY_ADDRESS) + 1);
       Ball_possess(); 
       message_pretty_print();
+      #else
+      LED_White();
+      state = STATE_IDLE;
+      IFG_DEBUG_PRINTLN(F("Posting Score"));
+      IFG_DEBUG_PRINTLN(F("Going to state STATE_IDLE"));
+      message_pretty_print();
+      display_score();
+      #endif
     }
     else if(currentMillis - previousMillis > interval) { // timeout!
       LED_Red();
@@ -150,4 +166,17 @@ void do_action_without_ball(void){
     break;
   }
 }
+
+#ifdef IS_SCORE_BOARD
+
+uint8_t score [SCORE_COUNT] = {0};
+uint8_t num_scores = 0;
+
+void display_score ( void )
+{
+//  score[++num_scores] = compute_score (); // rtns 0, 1, 2
+  
+}
+
+#endif
 
