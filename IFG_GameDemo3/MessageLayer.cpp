@@ -571,6 +571,9 @@ uint8_t compute_score(void){
     }
     
     current_player_score = get_player_score(message_payload[ii]);
+    IFG_DEBUG_PRINT(message_payload[ii]);
+    IFG_DEBUG_PRINT(F(": "));
+    IFG_DEBUG_PRINTLN(current_player_score);
     
     if((ii > 0) && (last_player_score != current_player_score)){
        player_scores_are_equal = 0;
@@ -579,15 +582,22 @@ uint8_t compute_score(void){
     last_player_score = current_player_score;
     num_players++;
     total_score += current_player_score;
+
+    IFG_DEBUG_PRINT(F("Total Score: "));
+    IFG_DEBUG_PRINTLN(total_score);
   }  
   
-  if((total_score >= 8) && (num_players == NUM_PLAYERS_TOTAL)){
+  if((total_score >= 4)){ // && (num_players == NUM_PLAYERS_TOTAL)){
+    IFG_DEBUG_PRINTLN(F("TOTAL SCORE >= 4"));
     game_score = 1;
   }
   
   if((game_score == 1) && (player_scores_are_equal == 1)){
+    IFG_DEBUG_PRINTLN(F("... AND EQUAL"));    
     game_score = 2;
   }
   
+  IFG_DEBUG_PRINT(F("Game Score: "));  
+  IFG_DEBUG_PRINTLN(game_score);
   return game_score;
 }

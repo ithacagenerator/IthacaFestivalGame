@@ -6,7 +6,7 @@
 #include "IFG_Ball.h"
 #include "MessageLayer.h"
 #include "TransportLayer.h"
-#ifdef IS_SCORE_BOARD
+#if defined(IS_SCORE_BOARD)
 #include <Adafruit_NeoPixal.h>
 #endif
 
@@ -33,17 +33,21 @@ void setup(){
   IFG_DEBUG_BEGIN(115200);
   IFG_DEBUG_PRINTLN(F("Ithaca Festival Game"));
 
+  #if defined(IS_SCORE_BOARD)
+  IFG_DEBUG_PRINTLN(F("Scoreboard!"));
+  #endif
+
   Transport_enable_receive(); // start the receiver
   PushButton_Init();
   LED_Init();
 
-  //TODO: If you are player one, you should star with the ball
-  if(1){
-    Ball_possess();
-    // TODO: Should the first player start with a point automatically?
-    // set_player_score(MY_ADDRESS, 1);
-    LED_White();
-  }
+  //TODO: If you are player one, you should start with the ball
+  #if defined(STARTS_WITH_BALL)
+  Ball_possess();
+  // TODO: Should the first player start with a point automatically?
+  // set_player_score(MY_ADDRESS, 1);
+  LED_White();
+  #endif
 }
 
 void loop(){
@@ -153,6 +157,8 @@ void do_action_without_ball(void){
       IFG_DEBUG_PRINTLN(F("Going to state STATE_IDLE"));
       message_pretty_print();
       display_score();
+      delay(5000); // leave the light on for 5 seconds
+      LED_Off();
       #endif
     }
     else if(currentMillis - previousMillis > interval) { // timeout!
@@ -167,15 +173,19 @@ void do_action_without_ball(void){
   }
 }
 
-#ifdef IS_SCORE_BOARD
+#if defined(IS_SCORE_BOARD)
 
-uint8_t score [SCORE_COUNT] = {0};
+uint8_t score[SCORE_COUNT] = {0};
 uint8_t num_scores = 0;
 
-void display_score ( void )
-{
-//  score[++num_scores] = compute_score (); // rtns 0, 1, 2
-  
+void display_score ( void ){
+  score[num_scores++] = compute_score(); // rtns 0, 1, 2
+  for(uint8_t ii = 0; ii < num_scores; ii++){
+    IFG_DEBUG_PRINT(F("ROUND "));
+    IFG_DEBUG_PRINT(ii);
+    IFG_DEBUG_PRINT(F(": "));
+    IFG_DEBUG_PRINTLN(score[ii]);
+  }
 }
 
 #endif

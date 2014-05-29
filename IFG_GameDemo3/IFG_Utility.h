@@ -1,11 +1,15 @@
 #ifndef ___IFG_UTILITY_H___
 #define ___IFG_UTILITY_H___
 
-#define NUM_PLAYERS_TOTAL 4  // up to 255
-#define MY_ADDRESS        0x79 // 8-bit address - zero is not allowed
 // TODO: Factor the address out as an initialization step through button press or something
+#define NUM_PLAYERS_TOTAL 4    // up to 255
+#define MY_ADDRESS        0x18 // 8-bit address - zero is not allowed
+//#define STARTS_WITH_BALL
+#define IS_SCORE_BOARD         // defined if this is the scoreboard
 
-#define IS_SCORE_BOARD  // defined if this is the scoreboard
+#if defined(IS_SCORE_BOARD)
+#undef STARTS_WITH_BALL
+#endif
 
 // only define one of the __USING_ATMEGA328__ or __USING_ATTINY84__
 #define __USING_ATMEGA328__
